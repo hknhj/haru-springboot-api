@@ -1,6 +1,6 @@
 package com.haru.api.infra.redis;
 
-import com.haru.api.domain.moodTracker.service.MoodTrackerReportService;
+import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.Set;
 public class RedisReportConsumer {
 
     private final StringRedisTemplate redisTemplate;
-    private final MoodTrackerReportService moodTrackerReportService;
+    private final MoodTrackerReportUseCase moodTrackerReportUseCase;
 
     @Value("${queue-name}")
     private String QUEUE_KEY;

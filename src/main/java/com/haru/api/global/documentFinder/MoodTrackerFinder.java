@@ -1,7 +1,7 @@
 package com.haru.api.global.documentFinder;
 
 import com.haru.api.workspace.domain.enums.DocumentType;
-import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
+import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.util.HashIdUtil;

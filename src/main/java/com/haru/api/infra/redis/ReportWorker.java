@@ -1,6 +1,6 @@
 package com.haru.api.infra.redis;
 
-import com.haru.api.domain.moodTracker.service.MoodTrackerReportService;
+import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 public class ReportWorker {
 
     private final StringRedisTemplate redisTemplate;
-    private final MoodTrackerReportService reportService;
+    private final MoodTrackerReportUseCase reportService;
     private final ExecutorService executor = Executors.newFixedThreadPool(5); // 5개 병렬 Worker
 
     private static final String WORKER_QUEUE = "REPORT_WORKER_QUEUE";

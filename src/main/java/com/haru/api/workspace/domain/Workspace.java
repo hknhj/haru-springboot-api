@@ -1,7 +1,7 @@
 package com.haru.api.workspace.domain;
 
 import com.haru.api.meeting.domain.Meeting;
-import com.haru.api.domain.moodTracker.entity.MoodTracker;
+import com.haru.api.moodTracker.domain.MoodTracker;
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
