@@ -1,4 +1,4 @@
-package com.haru.api.domain.meeting.dto;
+package com.haru.api.meeting.presentation.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.global.common.entity.TitleHolder;

@@ -1,9 +1,10 @@
-package com.haru.api.domain.meeting.service;
+package com.haru.api.meeting.application.service;
 
-import com.haru.api.domain.meeting.converter.MeetingConverter;
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.meeting.application.converter.MeetingConverter;
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
+import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.meeting.domain.Meeting;
+import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MeetingQueryServiceImpl implements MeetingQueryService{
+public class MeetingQueryUseCaseImpl implements MeetingQueryUseCase {
 
     private final MeetingRepository meetingRepository;
     private final AmazonS3Manager amazonS3Manager;

@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Long> {
 
-    @Query("SELECT new com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO$UserWorkspaceWithTitle(" +
+    @Query("SELECT new com.haru.api.workspace.presentation.dto.UserWorkspaceResponseDTO$UserWorkspaceWithTitle(" +
             "uw.workspace.id, " +
             "uw.workspace.title, " +
             "uw.workspace.keyName, " +

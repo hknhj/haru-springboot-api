@@ -1,6 +1,6 @@
 package com.haru.api.infra.api.repository;
 
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

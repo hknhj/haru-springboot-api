@@ -1,6 +1,6 @@
-package com.haru.api.domain.meeting.repository;
+package com.haru.api.meeting.infrastructure;
 
-import com.haru.api.domain.meeting.entity.Keyword;
+import com.haru.api.meeting.domain.Keyword;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.haru.api.infra.api.entity;
 
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.domain.Meeting;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;

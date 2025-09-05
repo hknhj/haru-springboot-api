@@ -1,9 +1,9 @@
 package com.haru.api.infra.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.meeting.service.MeetingCommandService;
+import com.haru.api.meeting.domain.Meeting;
+import com.haru.api.meeting.infrastructure.MeetingRepository;
+import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -45,7 +45,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private final ObjectMapper objectMapper;
 
-    private final MeetingCommandService meetingCommandService;
+    private final MeetingCommandUseCase meetingCommandUseCase;
 
     private final Pattern pathPattern = Pattern.compile("^/ws/audio/(\\w+)$");
 
@@ -85,7 +85,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         String sessionId = session.getId();
 
         // 회의 종료 후, 회의 음성 파일 s3 업로드, AI 회의록 생성
-        meetingCommandService.processAfterMeeting(sessionBuffers.get(sessionId));
+        meetingCommandUseCase.processAfterMeeting(sessionBuffers.get(sessionId));
 
         sessionBuffers.remove(sessionId);
         sessionQueues.remove(sessionId);

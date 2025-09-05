@@ -5,7 +5,7 @@ import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.workspace.domain.Documentable;
 import com.haru.api.workspace.domain.UserDocumentLastOpened;
 import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
-import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.user.domain.User;

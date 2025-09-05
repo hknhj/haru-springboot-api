@@ -1,4 +1,4 @@
-package com.haru.api.domain.meeting.entity;
+package com.haru.api.meeting.domain;
 
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;

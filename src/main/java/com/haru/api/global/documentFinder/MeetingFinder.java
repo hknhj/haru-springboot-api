@@ -1,7 +1,7 @@
 package com.haru.api.global.documentFinder;
 
 import com.haru.api.workspace.domain.enums.DocumentType;
-import com.haru.api.domain.meeting.repository.MeetingRepository;
+import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import lombok.RequiredArgsConstructor;
