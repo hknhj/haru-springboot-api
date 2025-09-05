@@ -4,7 +4,7 @@ import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.*;
 import com.haru.api.domain.moodTracker.entity.enums.QuestionType;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.util.HashIdUtil;
 import org.springframework.stereotype.Component;

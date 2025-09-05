@@ -5,7 +5,7 @@ import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.user.dto.UserResponseDTO;
+import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.global.util.HashIdUtil;

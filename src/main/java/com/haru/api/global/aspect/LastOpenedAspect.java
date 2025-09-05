@@ -2,9 +2,8 @@ package com.haru.api.global.aspect;
 
 import com.haru.api.domain.lastOpened.entity.Documentable;
 import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.global.annotation.TrackLastOpened;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;

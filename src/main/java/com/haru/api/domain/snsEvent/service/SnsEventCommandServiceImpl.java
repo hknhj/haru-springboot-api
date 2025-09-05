@@ -13,7 +13,7 @@ import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.snsEvent.repository.WinnerRepository;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
 import com.haru.api.domain.userWorkspace.entity.enums.Auth;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;

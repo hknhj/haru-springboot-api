@@ -1,6 +1,6 @@
 package com.haru.api.domain.userWorkspace.service;
 
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.infra.s3.AmazonS3Manager;

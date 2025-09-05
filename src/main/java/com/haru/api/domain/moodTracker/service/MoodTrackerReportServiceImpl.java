@@ -3,7 +3,7 @@ package com.haru.api.domain.moodTracker.service;
 import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.global.util.file.FileConvertHelper;
 import com.haru.api.infra.api.dto.SurveyReportResponse;
