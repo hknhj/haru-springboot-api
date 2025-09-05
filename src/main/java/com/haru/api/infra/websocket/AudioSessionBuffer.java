@@ -1,6 +1,6 @@
 package com.haru.api.infra.websocket;
 
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.infra.api.entity.SpeechSegment;
 
 import java.io.ByteArrayOutputStream;

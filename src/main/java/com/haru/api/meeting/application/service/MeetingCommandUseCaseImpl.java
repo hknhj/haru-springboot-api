@@ -1,15 +1,16 @@
-package com.haru.api.domain.meeting.service;
+package com.haru.api.meeting.application.service;
 
+import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.workspace.domain.UserDocumentLastOpened;
 import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
-import com.haru.api.domain.meeting.converter.MeetingConverter;
-import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.meeting.entity.Keyword;
-import com.haru.api.domain.meeting.repository.MeetingRepository;
-import com.haru.api.domain.meeting.repository.KeywordRepository;
+import com.haru.api.meeting.application.converter.MeetingConverter;
+import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
+import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.meeting.domain.Meeting;
+import com.haru.api.meeting.domain.Keyword;
+import com.haru.api.meeting.infrastructure.MeetingRepository;
+import com.haru.api.meeting.infrastructure.KeywordRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
@@ -50,7 +51,7 @@ import static com.haru.api.workspace.domain.enums.DocumentType.AI_MEETING_MANAGE
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MeetingCommandServiceImpl implements MeetingCommandService {
+public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final WorkspaceRepository workspaceRepository;

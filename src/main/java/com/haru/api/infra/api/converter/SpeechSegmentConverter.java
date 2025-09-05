@@ -1,6 +1,6 @@
 package com.haru.api.infra.api.converter;
 
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.infra.api.dto.SpeechSegmentResponseDTO;
 import com.haru.api.infra.api.dto.SttResponseDTO;
 import com.haru.api.infra.api.entity.SpeechSegment;

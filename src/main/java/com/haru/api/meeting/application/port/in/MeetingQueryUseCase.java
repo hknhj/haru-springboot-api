@@ -1,14 +1,14 @@
-package com.haru.api.domain.meeting.service;
+package com.haru.api.meeting.application.port.in;
 
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 
 import java.util.List;
 
-public interface MeetingQueryService {
+public interface MeetingQueryUseCase {
 
     List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Workspace workspace);
 

@@ -1,10 +1,10 @@
-package com.haru.api.domain.meeting.controller;
+package com.haru.api.meeting.presentation;
 
-import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.meeting.service.MeetingCommandService;
-import com.haru.api.domain.meeting.service.MeetingQueryService;
+import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
+import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.meeting.domain.Meeting;
+import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
@@ -30,8 +30,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MeetingController {
 
-    private final MeetingCommandService meetingCommandService;
-    private final MeetingQueryService meetingQueryService;
+    private final MeetingCommandUseCase meetingCommandUseCase;
+    private final MeetingQueryUseCase meetingQueryUseCase;
 
 
     @Operation(summary = "회의 생성 API", description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580e8bf25c99cc81998bb)" +" 안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
@@ -61,7 +61,7 @@ public class MeetingController {
             throw new GeneralException(ErrorStatus.MEETING_AGENDAFILE_NOT_FOUND);
         }
 
-        MeetingResponseDTO.createMeetingResponse response = meetingCommandService.createMeeting(user, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandUseCase.createMeeting(user, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }
@@ -77,7 +77,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryService.getMeetings(user, workspace);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryUseCase.getMeetings(user, workspace);
 
         return ApiResponse.onSuccess(response);
     }
@@ -93,7 +93,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        meetingCommandService.updateMeetingTitle(user, meeting, request);
+        meetingCommandUseCase.updateMeetingTitle(user, meeting, request);
 
         return ApiResponse.onSuccess("제목수정이 완료되었습니다.");
     }
@@ -108,7 +108,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        meetingCommandService.deleteMeeting(user, meeting);
+        meetingCommandUseCase.deleteMeeting(user, meeting);
 
         return ApiResponse.onSuccess("회의가 삭제되었습니다.");
     }
@@ -123,7 +123,7 @@ public class MeetingController {
         @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        MeetingResponseDTO.getMeetingProceeding response = meetingQueryService.getMeetingProceeding(user, meeting);
+        MeetingResponseDTO.getMeetingProceeding response = meetingQueryUseCase.getMeetingProceeding(user, meeting);
 
         return ApiResponse.onSuccess(response);
 
@@ -141,7 +141,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        meetingCommandService.adjustProceeding(user, meeting, request);
+        meetingCommandUseCase.adjustProceeding(user, meeting, request);
 
         return ApiResponse.onSuccess("회의가 수정되었습니다.");
 
@@ -158,7 +158,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        meetingCommandService.endMeeting(user, meeting);
+        meetingCommandUseCase.endMeeting(user, meeting);
 
         return ApiResponse.onSuccess("회의가 종료되었습니다");
 
@@ -176,7 +176,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ){
 
-        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryService.downloadMeeting(user, meeting, format);
+        MeetingResponseDTO.proceedingDownLoadLinkResponse response = meetingQueryUseCase.downloadMeeting(user, meeting, format);
 
         return ApiResponse.onSuccess(response);
 
@@ -194,7 +194,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryService.getTranscript(user, meeting);
+        MeetingResponseDTO.TranscriptResponse transcriptResponse = meetingQueryUseCase.getTranscript(user, meeting);
 
         return ApiResponse.onSuccess(transcriptResponse);
 
@@ -212,7 +212,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ){
 
-        MeetingResponseDTO.proceedingVoiceLinkResponse response = meetingQueryService.getMeetingVoiceFile(user, meeting);
+        MeetingResponseDTO.proceedingVoiceLinkResponse response = meetingQueryUseCase.getMeetingVoiceFile(user, meeting);
 
         return ApiResponse.onSuccess(response);
 

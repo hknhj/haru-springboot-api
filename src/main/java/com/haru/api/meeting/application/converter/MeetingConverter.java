@@ -1,7 +1,7 @@
-package com.haru.api.domain.meeting.converter;
+package com.haru.api.meeting.application.converter;
 
-import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
-import com.haru.api.domain.meeting.entity.Meeting;
+import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.user.domain.User;
 import org.springframework.stereotype.Component;
 
