@@ -1,0 +1,44 @@
+package com.haru.api.workspace.domain;
+
+import com.haru.api.user.domain.User;
+import com.haru.api.workspace.domain.enums.Auth;
+import com.haru.api.global.common.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
+@Entity
+@Table(name = "user_workspaces")
+@Getter
+@DynamicUpdate
+@DynamicInsert
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class UserWorkspace extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace;
+
+    @Column(name = "auth", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Auth auth;
+
+    // existsBy에서 join이 발생하여 추가
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private Long userId;
+
+    // existsBy에서 join이 발생하여 추가
+    @Column(name = "workspace_id", insertable = false, updatable = false)
+    private Long workspaceId;
+}

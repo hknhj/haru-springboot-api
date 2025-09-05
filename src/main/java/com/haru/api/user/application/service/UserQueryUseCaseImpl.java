@@ -1,6 +1,6 @@
 package com.haru.api.user.application.service;
 
-import com.haru.api.user.application.UserConverter;
+import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.domain.User;

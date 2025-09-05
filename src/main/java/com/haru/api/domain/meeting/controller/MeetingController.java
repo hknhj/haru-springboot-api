@@ -7,7 +7,7 @@ import com.haru.api.domain.meeting.service.MeetingCommandService;
 import com.haru.api.domain.meeting.service.MeetingQueryService;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.AuthMeeting;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.annotation.AuthWorkspace;

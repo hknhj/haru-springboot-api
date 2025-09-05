@@ -1,7 +1,7 @@
 package com.haru.api.global.argumentResolver;
 
-import com.haru.api.domain.lastOpened.entity.Documentable;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.workspace.domain.Documentable;
+import com.haru.api.workspace.domain.enums.DocumentType;
 import com.haru.api.global.annotation.AuthDocument;
 import com.haru.api.global.documentFinder.DocumentFinder;
 import org.springframework.core.MethodParameter;

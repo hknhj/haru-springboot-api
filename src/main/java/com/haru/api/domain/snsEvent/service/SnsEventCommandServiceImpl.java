@@ -1,6 +1,6 @@
 package com.haru.api.domain.snsEvent.service;
 
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
 import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
@@ -14,11 +14,11 @@ import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.snsEvent.repository.WinnerRepository;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.entity.enums.Auth;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
-import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.workspace.domain.UserWorkspace;
+import com.haru.api.workspace.domain.enums.Auth;
+import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.infrastructure.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
@@ -62,7 +62,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
     private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
     private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
@@ -176,7 +176,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
+        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
@@ -250,7 +250,7 @@ public class SnsEventCommandServiceImpl implements SnsEventCommandService{
 
         // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
-        userDocumentLastOpenedService.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
+        userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
     }
 
     @Override

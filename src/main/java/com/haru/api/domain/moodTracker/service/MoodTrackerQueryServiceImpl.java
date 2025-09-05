@@ -1,7 +1,7 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.domain.UserDocumentId;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
@@ -9,10 +9,10 @@ import com.haru.api.domain.moodTracker.entity.SurveyQuestion;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.repository.*;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.entity.enums.Auth;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.UserWorkspace;
+import com.haru.api.workspace.domain.enums.Auth;
+import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
@@ -38,7 +38,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
     private final SurveyQuestionRepository surveyQuestionRepository;
 
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     @Override
     public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
@@ -97,7 +97,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
         UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
 
-        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
+        userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
@@ -136,7 +136,7 @@ public class MoodTrackerQueryServiceImpl implements MoodTrackerQueryService {
 
         UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
 
-        userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
+        userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(

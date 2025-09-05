@@ -9,7 +9,7 @@ import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.domain.snsEvent.repository.WinnerRepository;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

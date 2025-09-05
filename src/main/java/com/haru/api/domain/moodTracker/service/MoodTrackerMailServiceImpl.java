@@ -2,7 +2,7 @@ package com.haru.api.domain.moodTracker.service;
 
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.util.HashIdUtil;

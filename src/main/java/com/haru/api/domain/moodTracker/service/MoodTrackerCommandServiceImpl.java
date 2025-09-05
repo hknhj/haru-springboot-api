@@ -1,6 +1,6 @@
 package com.haru.api.domain.moodTracker.service;
 
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.domain.moodTracker.converter.MoodTrackerConverter;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
@@ -9,11 +9,11 @@ import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.repository.*;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.entity.enums.Auth;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
-import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.workspace.domain.UserWorkspace;
+import com.haru.api.workspace.domain.enums.Auth;
+import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.infrastructure.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -57,7 +57,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
 
     private final HashIdUtil hashIdUtil;
 
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
     private final WorkspaceRepository workspaceRepository;
 
     /**
@@ -98,7 +98,7 @@ public class MoodTrackerCommandServiceImpl implements MoodTrackerCommandService 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
+        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }

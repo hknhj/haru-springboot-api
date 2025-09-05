@@ -1,8 +1,8 @@
 package com.haru.api.global.aspect;
 
-import com.haru.api.domain.lastOpened.entity.Documentable;
-import com.haru.api.domain.lastOpened.entity.UserDocumentId;
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.domain.Documentable;
+import com.haru.api.workspace.domain.UserDocumentId;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.global.annotation.TrackLastOpened;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Order(1)
 public class LastOpenedAspect {
 
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     @Around("@annotation(trackLastOpened)")
     public Object trackLastOpened(ProceedingJoinPoint joinPoint, TrackLastOpened trackLastOpened) throws Throwable {
@@ -39,7 +39,7 @@ public class LastOpenedAspect {
 
             UserDocumentId userDocumentId = new UserDocumentId(user.getId(), document.getId(), document.getDocumentType());
 
-            userDocumentLastOpenedService.updateLastOpened(userDocumentId, workspaceId, title);
+            userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
         }
 
         return result;

@@ -1,6 +1,6 @@
 package com.haru.api.global.documentFinder;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.workspace.domain.enums.DocumentType;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;

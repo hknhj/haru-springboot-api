@@ -1,7 +1,7 @@
 package com.haru.api.global.argumentResolver;
 
-import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.infrastructure.WorkspaceRepository;
 import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;

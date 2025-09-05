@@ -9,7 +9,7 @@ import com.haru.api.domain.snsEvent.entity.enums.ListType;
 import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
 import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.AuthSnsEvent;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.annotation.AuthWorkspace;

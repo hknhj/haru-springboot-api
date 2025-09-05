@@ -3,7 +3,7 @@ package com.haru.api.domain.snsEvent.service;
 import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 
 public interface SnsEventQueryService {
 
