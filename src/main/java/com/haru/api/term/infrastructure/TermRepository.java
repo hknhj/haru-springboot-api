@@ -1,7 +1,7 @@
-package com.haru.api.domain.term.repository;
+package com.haru.api.term.infrastructure;
 
-import com.haru.api.domain.term.entity.Term;
-import com.haru.api.domain.term.entity.enums.TermType;
+import com.haru.api.term.domain.Term;
+import com.haru.api.term.domain.enums.TermType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

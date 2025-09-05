@@ -1,7 +1,7 @@
-package com.haru.api.domain.term.converter;
+package com.haru.api.term.application.converter;
 
-import com.haru.api.domain.term.dto.TermResponseDTO;
-import com.haru.api.domain.term.entity.Term;
+import com.haru.api.term.presentation.dto.TermResponseDTO;
+import com.haru.api.term.domain.Term;
 import org.springframework.stereotype.Component;
 
 @Component
