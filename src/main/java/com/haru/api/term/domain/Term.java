@@ -1,6 +1,6 @@
-package com.haru.api.domain.term.entity;
+package com.haru.api.term.domain;
 
-import com.haru.api.domain.term.entity.enums.TermType;
+import com.haru.api.term.domain.enums.TermType;
 import jakarta.persistence.*;
 import lombok.*;
 

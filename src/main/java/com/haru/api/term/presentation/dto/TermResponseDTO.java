@@ -1,6 +1,6 @@
-package com.haru.api.domain.term.dto;
+package com.haru.api.term.presentation.dto;
 
-import com.haru.api.domain.term.entity.enums.TermType;
+import com.haru.api.term.domain.enums.TermType;
 import lombok.Builder;
 import lombok.Getter;
 

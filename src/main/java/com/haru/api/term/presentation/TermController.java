@@ -1,12 +1,11 @@
-package com.haru.api.domain.term.controller;
+package com.haru.api.term.presentation;
 
-import com.haru.api.domain.term.dto.TermResponseDTO;
-import com.haru.api.domain.term.entity.enums.TermType;
-import com.haru.api.domain.term.service.TermService;
+import com.haru.api.term.presentation.dto.TermResponseDTO;
+import com.haru.api.term.domain.enums.TermType;
+import com.haru.api.term.application.port.in.TermUseCase;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/terms")
 @RequiredArgsConstructor
 public class TermController {
-    private final TermService termService;
+    private final TermUseCase termUseCase;
 
     @GetMapping
     @Operation(
@@ -39,6 +38,6 @@ public class TermController {
             )
             @RequestParam TermType type
     ) {
-        return ApiResponse.onSuccess(termService.getTermByType(type));
+        return ApiResponse.onSuccess(termUseCase.getTermByType(type));
     }
 }

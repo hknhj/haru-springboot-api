@@ -1,4 +1,4 @@
-package com.haru.api.domain.term.entity.enums;
+package com.haru.api.term.domain.enums;
 
 public enum TermType {
     SERVICE,
