@@ -5,8 +5,8 @@ import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
-import com.haru.api.domain.workspace.dto.WorkspaceResponseDTO;
-import com.haru.api.domain.workspace.service.WorkspaceCommandService;
+import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
+import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +24,7 @@ public class UserController {
 
     private final UserCommandUseCase userCommandUseCase;
     private final UserQueryUseCase userQueryUseCase;
-    private final WorkspaceCommandService workspaceCommandService;
+    private final WorkspaceCommandUseCase workspaceCommandUseCase;
 
     @Operation(summary = "회원가입 [v1.0 (2025-08-05)]", description =
             "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5819ca025d31fe9167842&pm=s)" +
@@ -39,7 +39,7 @@ public class UserController {
 
         // 워크스페이스 초대 메일을 통하여 회원가입한 경우
         if (token != null) {
-            WorkspaceResponseDTO.InvitationAcceptResult invitationAcceptResult = workspaceCommandService.acceptInvite(token, user);
+            WorkspaceResponseDTO.InvitationAcceptResult invitationAcceptResult = workspaceCommandUseCase.acceptInvite(token, user);
             return ApiResponse.onSuccess(invitationAcceptResult);
         }
 

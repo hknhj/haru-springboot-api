@@ -6,7 +6,7 @@ import com.haru.api.domain.meeting.entity.Meeting;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;

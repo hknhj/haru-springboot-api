@@ -1,6 +1,6 @@
 package com.haru.api.global.interceptor;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.workspace.domain.enums.DocumentType;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
 import com.haru.api.domain.snsEvent.repository.SnsEventRepository;

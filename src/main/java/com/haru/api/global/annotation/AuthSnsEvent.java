@@ -1,6 +1,6 @@
 package com.haru.api.global.annotation;
 
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.workspace.domain.enums.DocumentType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

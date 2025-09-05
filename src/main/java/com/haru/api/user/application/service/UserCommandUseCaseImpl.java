@@ -1,6 +1,6 @@
 package com.haru.api.user.application.service;
 
-import com.haru.api.user.application.UserConverter;
+import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
@@ -9,7 +9,7 @@ import com.haru.api.user.domain.enums.EmailStatus;
 import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.infra.security.jwt.JwtUtils;
 import com.haru.api.infra.security.jwt.SecurityUtil;
-import com.haru.api.domain.workspace.service.WorkspaceCommandService;
+import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
@@ -38,7 +38,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     private int refreshExpTime;
 
     private final UserRepository userRepository;
-    private final WorkspaceCommandService workspaceCommandService;
+    private final WorkspaceCommandUseCase workspaceCommandUseCase;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtils jwtUtils;
@@ -182,7 +182,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
             userRepository.save(user);
 
             if(token != null) {
-                workspaceCommandService.acceptInvite(token, user);
+                workspaceCommandUseCase.acceptInvite(token, user);
             }
 
             return login(UserRequestDTO.LoginRequest.builder()

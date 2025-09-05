@@ -1,7 +1,7 @@
 package com.haru.api.global.aspect;
 
-import com.haru.api.domain.lastOpened.entity.Documentable;
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.domain.Documentable;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DeleteDocumentAspect {
 
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     @AfterReturning("@annotation(com.haru.api.global.annotation.DeleteDocument)")
     public void afterDeleteDocument(JoinPoint joinPoint) {
@@ -33,7 +33,7 @@ public class DeleteDocumentAspect {
 
         // Documentable 객체를 토대로 서비스 로직 호출
         if (document != null) {
-            userDocumentLastOpenedService.deleteRecordsForWorkspaceUsers(document);
+            userDocumentLastOpenedQueryUseCase.deleteRecordsForWorkspaceUsers(document);
         }
     }
 }

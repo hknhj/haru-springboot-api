@@ -1,9 +1,9 @@
 package com.haru.api.domain.meeting.entity;
 
-import com.haru.api.domain.lastOpened.entity.Documentable;
-import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
+import com.haru.api.workspace.domain.Documentable;
+import com.haru.api.workspace.domain.enums.DocumentType;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

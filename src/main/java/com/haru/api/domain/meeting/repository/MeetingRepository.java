@@ -1,7 +1,7 @@
 package com.haru.api.domain.meeting.repository;
 
 import com.haru.api.domain.meeting.entity.Meeting;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

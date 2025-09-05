@@ -1,8 +1,8 @@
 package com.haru.api.domain.meeting.service;
 
-import com.haru.api.domain.lastOpened.entity.UserDocumentLastOpened;
-import com.haru.api.domain.lastOpened.repository.UserDocumentLastOpenedRepository;
-import com.haru.api.domain.lastOpened.service.UserDocumentLastOpenedService;
+import com.haru.api.workspace.domain.UserDocumentLastOpened;
+import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
+import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.domain.meeting.converter.MeetingConverter;
 import com.haru.api.domain.meeting.dto.MeetingRequestDTO;
 import com.haru.api.domain.meeting.dto.MeetingResponseDTO;
@@ -11,11 +11,11 @@ import com.haru.api.domain.meeting.entity.Keyword;
 import com.haru.api.domain.meeting.repository.MeetingRepository;
 import com.haru.api.domain.meeting.repository.KeywordRepository;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.userWorkspace.entity.UserWorkspace;
-import com.haru.api.domain.userWorkspace.entity.enums.Auth;
-import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
-import com.haru.api.domain.workspace.entity.Workspace;
-import com.haru.api.domain.workspace.repository.WorkspaceRepository;
+import com.haru.api.workspace.domain.UserWorkspace;
+import com.haru.api.workspace.domain.enums.Auth;
+import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.infrastructure.WorkspaceRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -44,7 +44,7 @@ import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.haru.api.domain.lastOpened.entity.enums.DocumentType.AI_MEETING_MANAGER;
+import static com.haru.api.workspace.domain.enums.DocumentType.AI_MEETING_MANAGER;
 
 @Slf4j
 @Service
@@ -57,7 +57,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
-    private final UserDocumentLastOpenedService userDocumentLastOpenedService;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
     private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
@@ -125,7 +125,7 @@ public class MeetingCommandServiceImpl implements MeetingCommandService {
         // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedService.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
+        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }

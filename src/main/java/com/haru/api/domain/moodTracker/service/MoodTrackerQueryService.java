@@ -3,7 +3,7 @@ package com.haru.api.domain.moodTracker.service;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.MoodTracker;
 import com.haru.api.user.domain.User;
-import com.haru.api.domain.workspace.entity.Workspace;
+import com.haru.api.workspace.domain.Workspace;
 
 public interface MoodTrackerQueryService {
     MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace);
