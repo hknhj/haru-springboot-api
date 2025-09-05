@@ -1,15 +1,15 @@
-package com.haru.api.domain.snsEvent.service;
+package com.haru.api.snsEvent.application.port.in;
 
-import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
-import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
-import com.haru.api.domain.snsEvent.entity.enums.ListType;
+import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.enums.Format;
+import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
+import com.haru.api.snsEvent.domain.enums.ListType;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 
-public interface SnsEventCommandService {
+public interface SnsEventCommandUseCase {
     SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(User user, Workspace workspace, SnsEventRequestDTO.CreateSnsRequest request);
 
     SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(String code, Workspace workspace, InstagramRedirectType instagramRedirectType);

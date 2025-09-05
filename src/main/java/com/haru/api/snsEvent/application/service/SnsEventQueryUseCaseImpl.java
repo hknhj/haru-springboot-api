@@ -1,13 +1,14 @@
-package com.haru.api.domain.snsEvent.service;
+package com.haru.api.snsEvent.application.service;
 
-import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.Participant;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.Winner;
-import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
-import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
-import com.haru.api.domain.snsEvent.repository.WinnerRepository;
+import com.haru.api.snsEvent.application.converter.SnsEventConverter;
+import com.haru.api.snsEvent.application.port.in.SnsEventQueryUseCase;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.Participant;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.Winner;
+import com.haru.api.snsEvent.infrastructure.ParticipantRepository;
+import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
+import com.haru.api.snsEvent.infrastructure.WinnerRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
@@ -18,7 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SnsEventQueryServiceImpl implements SnsEventQueryService {
+public class SnsEventQueryUseCaseImpl implements SnsEventQueryUseCase {
 
     private final SnsEventRepository snsEventRepository;
     private final ParticipantRepository participantRepository;

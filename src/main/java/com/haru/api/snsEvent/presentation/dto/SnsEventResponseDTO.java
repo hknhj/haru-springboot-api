@@ -1,4 +1,4 @@
-package com.haru.api.domain.snsEvent.dto;
+package com.haru.api.snsEvent.presentation.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

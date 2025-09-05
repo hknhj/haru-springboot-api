@@ -2,7 +2,7 @@ package com.haru.api.domain.moodTracker.service;
 
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.domain.moodTracker.dto.MoodTrackerRequestDTO;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
 import com.haru.api.global.util.file.FileConvertHelper;

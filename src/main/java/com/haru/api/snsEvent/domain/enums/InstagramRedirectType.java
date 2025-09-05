@@ -1,4 +1,4 @@
-package com.haru.api.domain.snsEvent.entity.enums;
+package com.haru.api.snsEvent.domain.enums;
 
 public enum InstagramRedirectType {
     ONBOARDING, WORKSPACE

@@ -5,7 +5,7 @@ import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.AuthMeeting;

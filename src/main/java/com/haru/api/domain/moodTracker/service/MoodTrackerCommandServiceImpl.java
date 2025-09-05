@@ -7,7 +7,7 @@ import com.haru.api.domain.moodTracker.dto.MoodTrackerResponseDTO;
 import com.haru.api.domain.moodTracker.entity.*;
 import com.haru.api.domain.moodTracker.entity.enums.MoodTrackerVisibility;
 import com.haru.api.domain.moodTracker.repository.*;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
+import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;

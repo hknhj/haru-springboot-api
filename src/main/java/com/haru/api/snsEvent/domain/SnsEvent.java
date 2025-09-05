@@ -1,4 +1,4 @@
-package com.haru.api.domain.snsEvent.entity;
+package com.haru.api.snsEvent.domain;
 
 import com.haru.api.workspace.domain.Documentable;
 import com.haru.api.workspace.domain.enums.DocumentType;

@@ -1,11 +1,11 @@
-package com.haru.api.domain.snsEvent.service;
+package com.haru.api.snsEvent.application.port.in;
 
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 
-public interface SnsEventQueryService {
+public interface SnsEventQueryUseCase {
 
     SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(User user, Workspace workspace);
 
