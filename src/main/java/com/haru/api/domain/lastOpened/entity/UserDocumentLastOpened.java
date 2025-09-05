@@ -1,6 +1,6 @@
 package com.haru.api.domain.lastOpened.entity;
 
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;

@@ -6,7 +6,7 @@ import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.enums.Format;
 import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
 import com.haru.api.domain.snsEvent.entity.enums.ListType;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.workspace.entity.Workspace;
 
 public interface SnsEventCommandService {

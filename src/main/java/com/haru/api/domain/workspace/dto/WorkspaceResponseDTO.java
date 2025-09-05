@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.domain.lastOpened.entity.enums.DocumentType;
-import com.haru.api.domain.user.dto.UserResponseDTO;
+import com.haru.api.user.presentation.dto.UserResponseDTO;
 import lombok.Builder;
 import lombok.Getter;
 

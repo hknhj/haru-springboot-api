@@ -1,8 +1,8 @@
 package com.haru.api.global.interceptor;
 
-import com.haru.api.domain.user.entity.User;
-import com.haru.api.domain.user.repository.UserRepository;
-import com.haru.api.domain.user.security.jwt.SecurityUtil;
+import com.haru.api.user.domain.User;
+import com.haru.api.user.infrastructure.UserRepository;
+import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.domain.userWorkspace.repository.UserWorkspaceRepository;
 import com.haru.api.domain.workspace.entity.Workspace;
 import com.haru.api.domain.workspace.repository.WorkspaceRepository;

@@ -1,10 +1,10 @@
 package com.haru.api.global.config;
 
-import com.haru.api.domain.user.security.googleOauth2.CustomOAuth2FailureHandler;
-import com.haru.api.domain.user.security.googleOauth2.CustomOAuth2SuccessHandler;
-import com.haru.api.domain.user.security.login.CustomAuthenticationProvider;
-import com.haru.api.domain.user.security.googleOauth2.CustomOauth2UserService;
-import com.haru.api.domain.user.security.jwt.JwtAuthenticationEntryPoint;
+import com.haru.api.infra.security.googleOauth2.CustomOAuth2FailureHandler;
+import com.haru.api.infra.security.googleOauth2.CustomOAuth2SuccessHandler;
+import com.haru.api.infra.security.login.CustomAuthenticationProvider;
+import com.haru.api.infra.security.googleOauth2.CustomOauth2UserService;
+import com.haru.api.infra.security.jwt.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,13 +14,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @EnableWebSecurity
 @Configuration

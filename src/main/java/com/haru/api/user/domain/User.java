@@ -1,0 +1,56 @@
+package com.haru.api.user.domain;
+
+import com.haru.api.user.domain.enums.Status;
+import com.haru.api.global.common.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users")
+@Getter
+@DynamicUpdate
+@DynamicInsert
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class User extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 20)
+    private String name;
+
+    @Column(nullable = false, length = 50)
+    private String email;
+
+    @Column(length = 100)
+    private String password;
+
+    private boolean marketingAgreed;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Status status;
+
+    @Column(columnDefinition = "TEXT")
+    private String profileImage;
+
+    private LocalDateTime inactiveDate;
+
+    @Column(length = 50, unique = true)
+    private String providerId;
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+}

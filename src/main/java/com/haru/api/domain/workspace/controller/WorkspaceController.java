@@ -1,6 +1,6 @@
 package com.haru.api.domain.workspace.controller;
 
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 import com.haru.api.domain.userWorkspace.dto.UserWorkspaceResponseDTO;
 import com.haru.api.domain.userWorkspace.service.UserWorkspaceQueryService;
 import com.haru.api.domain.workspace.dto.WorkspaceRequestDTO;

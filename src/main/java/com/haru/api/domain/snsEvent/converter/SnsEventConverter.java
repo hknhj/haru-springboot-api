@@ -5,7 +5,7 @@ import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
 import com.haru.api.domain.snsEvent.entity.Participant;
 import com.haru.api.domain.snsEvent.entity.SnsEvent;
 import com.haru.api.domain.snsEvent.entity.Winner;
-import com.haru.api.domain.user.entity.User;
+import com.haru.api.user.domain.User;
 
 import java.util.ArrayList;
 import java.util.List;
