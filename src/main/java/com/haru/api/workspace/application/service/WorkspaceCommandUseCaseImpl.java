@@ -7,7 +7,7 @@ import com.haru.api.workspace.domain.UserDocumentLastOpened;
 import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.domain.moodTracker.repository.MoodTrackerRepository;
-import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
+import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.workspace.domain.enums.Auth;

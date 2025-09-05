@@ -1,10 +1,10 @@
-package com.haru.api.domain.snsEvent.converter;
+package com.haru.api.snsEvent.application.converter;
 
-import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.Participant;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.Winner;
+import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.Participant;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.Winner;
 import com.haru.api.user.domain.User;
 
 import java.util.ArrayList;

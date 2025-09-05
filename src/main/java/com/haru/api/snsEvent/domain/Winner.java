@@ -1,21 +1,19 @@
-package com.haru.api.domain.snsEvent.entity;
+package com.haru.api.snsEvent.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import java.util.Objects;
-
 @Entity
-@Table(name = "participants")
+@Table(name = "winners")
 @Getter
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Participant {
+public class Winner {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,8 +29,8 @@ public class Participant {
     public void setSnsEvent(SnsEvent snsEvent) {
         this.snsEvent = snsEvent;
         if (this.snsEvent != null) {
-            snsEvent.getParticipantList().remove(this);
+            snsEvent.getWinnerList().remove(this);
         }
-        this.snsEvent.getParticipantList().add(this);
+        this.snsEvent.getWinnerList().add(this);
     }
 }

@@ -1,6 +1,6 @@
 package com.haru.api.infra.api.restTemplate;
 
-import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
+import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

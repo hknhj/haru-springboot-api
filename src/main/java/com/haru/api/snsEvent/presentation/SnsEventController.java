@@ -1,13 +1,13 @@
-package com.haru.api.domain.snsEvent.controller;
+package com.haru.api.snsEvent.presentation;
 
-import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
-import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
-import com.haru.api.domain.snsEvent.entity.enums.ListType;
-import com.haru.api.domain.snsEvent.service.SnsEventCommandService;
-import com.haru.api.domain.snsEvent.service.SnsEventQueryService;
+import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.enums.Format;
+import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
+import com.haru.api.snsEvent.domain.enums.ListType;
+import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
+import com.haru.api.snsEvent.application.port.in.SnsEventQueryUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.AuthSnsEvent;
@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/sns")
 public class SnsEventController {
 
-    private final SnsEventCommandService snsEventCommandService;
-    private final SnsEventQueryService snsEventQueryService;
+    private final SnsEventCommandUseCase snsEventCommandUseCase;
+    private final SnsEventQueryUseCase snsEventQueryUseCase;
 
     @Operation(
             summary = "SNS 이벤트 생성 API [v1.0 (2025-08-05)]",
@@ -40,7 +40,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
         return ApiResponse.onSuccess(
-                snsEventCommandService.createSnsEvent(user, workspace, request)
+                snsEventCommandUseCase.createSnsEvent(user, workspace, request)
         );
     }
 
@@ -70,7 +70,7 @@ public class SnsEventController {
     ) {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandService.getInstagramAccessTokenAndAccount(code, workspace, instagramRedirectType)
+                snsEventCommandUseCase.getInstagramAccessTokenAndAccount(code, workspace, instagramRedirectType)
         );
     }
 
@@ -87,7 +87,7 @@ public class SnsEventController {
     ) {
 
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEventList(user, workspace)
+                snsEventQueryUseCase.getSnsEventList(user, workspace)
         );
     }
 
@@ -104,7 +104,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
 
-        snsEventCommandService.updateSnsEventTitle(user, snsEvent, request);
+        snsEventCommandUseCase.updateSnsEventTitle(user, snsEvent, request);
 
         return ApiResponse.onSuccess("");
 
@@ -123,7 +123,7 @@ public class SnsEventController {
 
     ) {
 
-        snsEventCommandService.deleteSnsEvent(user, snsEvent);
+        snsEventCommandUseCase.deleteSnsEvent(user, snsEvent);
 
         return ApiResponse.onSuccess("");
 
@@ -141,7 +141,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
         return ApiResponse.onSuccess(
-                snsEventQueryService.getSnsEvent(user, snsEvent)
+                snsEventQueryUseCase.getSnsEvent(user, snsEvent)
         );
     }
 
@@ -159,7 +159,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
         return ApiResponse.onSuccess(
-                snsEventCommandService.downloadList(
+                snsEventCommandUseCase.downloadList(
                         user,
                         snsEvent,
                         listType,
@@ -180,7 +180,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
         return ApiResponse.onSuccess(
-                snsEventQueryService.getInstagramAccountName(
+                snsEventQueryUseCase.getInstagramAccountName(
                         user,
                         workspace
                 )

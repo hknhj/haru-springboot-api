@@ -1,18 +1,19 @@
-package com.haru.api.domain.snsEvent.service;
+package com.haru.api.snsEvent.application.service;
 
+import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
-import com.haru.api.domain.snsEvent.converter.SnsEventConverter;
-import com.haru.api.domain.snsEvent.dto.SnsEventRequestDTO;
-import com.haru.api.domain.snsEvent.dto.SnsEventResponseDTO;
-import com.haru.api.domain.snsEvent.entity.Participant;
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.Winner;
-import com.haru.api.domain.snsEvent.entity.enums.Format;
-import com.haru.api.domain.snsEvent.entity.enums.InstagramRedirectType;
-import com.haru.api.domain.snsEvent.entity.enums.ListType;
-import com.haru.api.domain.snsEvent.repository.ParticipantRepository;
-import com.haru.api.domain.snsEvent.repository.SnsEventRepository;
-import com.haru.api.domain.snsEvent.repository.WinnerRepository;
+import com.haru.api.snsEvent.application.converter.SnsEventConverter;
+import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
+import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
+import com.haru.api.snsEvent.domain.Participant;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.Winner;
+import com.haru.api.snsEvent.domain.enums.Format;
+import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
+import com.haru.api.snsEvent.domain.enums.ListType;
+import com.haru.api.snsEvent.infrastructure.ParticipantRepository;
+import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
+import com.haru.api.snsEvent.infrastructure.WinnerRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
@@ -52,7 +53,7 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SnsEventCommandServiceImpl implements SnsEventCommandService{
+public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
     private final SpringTemplateEngine templateEngine;
 

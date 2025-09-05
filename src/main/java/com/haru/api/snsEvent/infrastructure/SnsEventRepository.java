@@ -1,6 +1,6 @@
-package com.haru.api.domain.snsEvent.repository;
+package com.haru.api.snsEvent.infrastructure;
 
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
+import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.workspace.domain.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

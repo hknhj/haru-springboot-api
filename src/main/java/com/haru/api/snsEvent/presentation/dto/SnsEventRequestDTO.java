@@ -1,4 +1,4 @@
-package com.haru.api.domain.snsEvent.dto;
+package com.haru.api.snsEvent.presentation.dto;
 
 import com.haru.api.global.common.entity.TitleHolder;
 import lombok.*;

@@ -1,7 +1,7 @@
-package com.haru.api.domain.snsEvent.repository;
+package com.haru.api.snsEvent.infrastructure;
 
-import com.haru.api.domain.snsEvent.entity.SnsEvent;
-import com.haru.api.domain.snsEvent.entity.Winner;
+import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.Winner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
