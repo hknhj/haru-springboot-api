@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESH_TOKEN_NOT_EQUAL;
@@ -45,17 +46,23 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
-    public User signUp(UserRequestDTO.SignUpRequest request) {
+    public UserResponseDTO.User signUp(UserRequestDTO.SignUpRequest request, String token) {
+
         String password = passwordEncoder.encode(request.getPassword());
+
         // 이메일 중복 확인
-        User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
-        if (foundUser != null) {
+        Optional<User> foundUser = userRepository.findByEmail(request.getEmail());
+
+        if (foundUser.isPresent())
             throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
-        } else {
-            User user = UserConverter.toUsers(request, password);
-            userRepository.save(user);
-            return user;
-        }
+
+        User user = UserConverter.toUsers(request, password);
+        userRepository.save(user);
+
+        if (token != null)
+            workspaceCommandUseCase.acceptInvite(token, user);
+
+        return UserConverter.toUserDTO(user);
     }
 
     @Override

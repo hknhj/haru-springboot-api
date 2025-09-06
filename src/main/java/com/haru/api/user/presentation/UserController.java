@@ -5,8 +5,6 @@ import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
-import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
-import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,27 +22,21 @@ public class UserController {
 
     private final UserCommandUseCase userCommandUseCase;
     private final UserQueryUseCase userQueryUseCase;
-    private final WorkspaceCommandUseCase workspaceCommandUseCase;
 
     @Operation(summary = "회원가입 [v1.0 (2025-08-05)]", description =
             "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5819ca025d31fe9167842&pm=s)" +
                     " 회원가입 API 입니다. 이메일과 패스워드 그리고 이름을 body에 입력해주세요. 워크스페이스 초대 메일을 통한 회원가입은 query string에 초대장의 token을 넣어주세요"
     )
     @PostMapping("/signup")
-    public ApiResponse<Object> signUp(
+    public ApiResponse<UserResponseDTO.User> signUp(
             @RequestBody @Valid UserRequestDTO.SignUpRequest request,
             @RequestParam(required = false) String token
     ) {
-        User user = userCommandUseCase.signUp(request);
-
-        // 워크스페이스 초대 메일을 통하여 회원가입한 경우
-        if (token != null) {
-            WorkspaceResponseDTO.InvitationAcceptResult invitationAcceptResult = workspaceCommandUseCase.acceptInvite(token, user);
-            return ApiResponse.onSuccess(invitationAcceptResult);
-        }
 
         // 일반 회원가입
-        return ApiResponse.onSuccess(null);
+        return ApiResponse.onSuccess(
+                userCommandUseCase.signUp(request, token)
+        );
     }
 
     @Operation(summary = "로그인 [v1.0 (2025-08-05)]", description =
