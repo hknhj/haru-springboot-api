@@ -48,21 +48,14 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     @Override
     public UserResponseDTO.User signUp(UserRequestDTO.SignUpRequest request, String token) {
 
-        String password = passwordEncoder.encode(request.getPassword());
+        // 유저 생성 및 저장
+        User createdUser = createUser(request);
 
-        // 이메일 중복 확인
-        Optional<User> foundUser = userRepository.findByEmail(request.getEmail());
-
-        if (foundUser.isPresent())
-            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
-
-        User user = UserConverter.toUsers(request, password);
-        userRepository.save(user);
-
+        // 초대 토큰이 있는 경우, 초대 수락 로직 호출
         if (token != null)
-            workspaceCommandUseCase.acceptInvite(token, user);
+            workspaceCommandUseCase.acceptInvite(token, createdUser);
 
-        return UserConverter.toUserDTO(user);
+        return UserConverter.toUserDTO(createdUser);
     }
 
     @Override
@@ -82,7 +75,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     @Override
     public UserResponseDTO.RefreshResponse refresh(String refreshToken) {
         Long userId = SecurityUtil.getCurrentUserId();
-        String key = "users:" + userId.toString();
+        String key = "users:" + userId;
         String accessToken;
         String newRefreshToken;
 
@@ -104,11 +97,11 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     public void logout(String accessToken) {
         // 로그아웃시킬 회원의 refresh token redis에서 삭제
         Long userId = SecurityUtil.getCurrentUserId();
-        String key = "users:" + userId.toString();
+        String key = "users:" + userId;
         redisTemplate.delete(key);
 
         // 로그아웃시킬 회원의 access token redis의 블랙리스트로 저장, 인가 처리시 블랙리스트 확인을 통해 로그아웃된 회원인지 확인함.
-        key = "blackList:" + userId.toString();
+        key = "blackList:" + userId;
         long tokenRemainTimeSecond = jwtUtils.tokenRemainTimeSecond(accessToken);
         redisTemplate.opsForValue().set(key, accessToken, tokenRemainTimeSecond, TimeUnit.SECONDS);
     }
@@ -173,29 +166,22 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
         return UserConverter.toCheckOriginalPassword(passwordEncoder.matches(request.getRequestPassword(), user.getPassword()));
     }
 
-    @Override
-    @Transactional
-    public UserResponseDTO.LoginResponse signupAndLoginAndInviteAccept(UserRequestDTO.SignUpRequest request, String token) {
 
+    @Override
+    public User createUser(UserRequestDTO.SignUpRequest request) {
+
+        // 이메일 중복 확인
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
+        }
+
+        // 비밀번호 암호화
         String password = passwordEncoder.encode(request.getPassword());
 
-        User foundUser = userRepository.findByEmail(request.getEmail()).orElse(null);
+        // DTO를 User 도메인 객체로 변환
+        User user = UserConverter.toUsers(request, password);
 
-        if (foundUser != null) {
-            throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
-        } else {
-
-            User user = UserConverter.toUsers(request, password);
-            userRepository.save(user);
-
-            if(token != null) {
-                workspaceCommandUseCase.acceptInvite(token, user);
-            }
-
-            return login(UserRequestDTO.LoginRequest.builder()
-                            .email(request.getEmail())
-                            .password(request.getPassword())
-                            .build());
-        }
+        // 데이터베이스에 저장
+        return userRepository.save(user);
     }
 }

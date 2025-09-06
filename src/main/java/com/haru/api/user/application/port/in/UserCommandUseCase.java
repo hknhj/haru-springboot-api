@@ -24,5 +24,5 @@ public interface UserCommandUseCase {
 
     UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user);
 
-    UserResponseDTO.LoginResponse signupAndLoginAndInviteAccept(UserRequestDTO.SignUpRequest request, String token);
+    User createUser(UserRequestDTO.SignUpRequest request);
 }
