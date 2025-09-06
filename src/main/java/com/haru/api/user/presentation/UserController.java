@@ -1,5 +1,6 @@
 package com.haru.api.user.presentation;
 
+import com.haru.api.user.application.port.in.UserSignUpWorkflowUseCase;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
@@ -22,6 +23,7 @@ public class UserController {
 
     private final UserCommandUseCase userCommandUseCase;
     private final UserQueryUseCase userQueryUseCase;
+    private final UserSignUpWorkflowUseCase userSignUpWorkflowUseCase;
 
     @Operation(summary = "회원가입 [v1.0 (2025-08-05)]", description =
             "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5819ca025d31fe9167842&pm=s)" +
@@ -32,10 +34,11 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.SignUpRequest request,
             @RequestParam(required = false) String token
     ) {
-
-        // 일반 회원가입
         return ApiResponse.onSuccess(
-                userCommandUseCase.signUp(request, token)
+                userCommandUseCase.signUp(
+                        request,
+                        token
+                )
         );
     }
 
@@ -48,7 +51,9 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.LoginRequest request
     ) {
         return ApiResponse.onSuccess(
-                userCommandUseCase.login(request)
+                userCommandUseCase.login(
+                        request
+                )
         );
     }
 
@@ -70,11 +75,13 @@ public class UserController {
                     "로그아웃 API 입니다. 로그아웃하고자 하는 유저의 Access Token을 header에 입력해주세요."
     )
     @DeleteMapping("/logout")
-    public ApiResponse<?> logout(
+    public ApiResponse<Object> logout(
             @RequestHeader("Authorization") String accessToken
     ) {
         userCommandUseCase.logout(accessToken);
-        return ApiResponse.onSuccess("");
+        return ApiResponse.onSuccess(
+                null
+        );
     }
 
     @Operation(summary = "회원 정보 조회", description =
@@ -85,9 +92,11 @@ public class UserController {
     public ApiResponse<UserResponseDTO.User> getUserInfo(
             @Parameter(hidden = true) @AuthUser User user
     ) {
-        UserResponseDTO.User userResponse = userQueryUseCase.getUserInfo(user);
-
-        return ApiResponse.onSuccess(userResponse);
+        return ApiResponse.onSuccess(
+                userQueryUseCase.getUserInfo(
+                        user
+                )
+        );
     }
 
     @Operation(summary = "회원 정보 수정", description =
@@ -99,9 +108,12 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.UserInfoUpdateRequest request,
             @Parameter(hidden = true) @AuthUser User user
     ) {
-        UserResponseDTO.User userResponse = userCommandUseCase.updateUserInfo(user, request);
-
-        return ApiResponse.onSuccess(userResponse);
+        return ApiResponse.onSuccess(
+                userCommandUseCase.updateUserInfo(
+                        user,
+                        request
+                )
+        );
     }
 
     @Operation(summary = "이메일로 회원 리스트 조회", description =
@@ -113,9 +125,12 @@ public class UserController {
             @RequestParam String email,
             @Parameter(hidden = true) @AuthUser User user
     ) {
-        List<UserResponseDTO.User> users = userQueryUseCase.getSimilarEmailUsers(user, email);
-
-        return ApiResponse.onSuccess(users);
+        return ApiResponse.onSuccess(
+                userQueryUseCase.getSimilarEmailUsers(
+                        user,
+                        email
+                )
+        );
     }
 
     @Operation(summary = "이메일 중복 검사 [v1.0 (2025-08-05)]", description =
@@ -142,7 +157,12 @@ public class UserController {
             @RequestBody UserRequestDTO.CheckOriginalPasswordRequest request,
             @Parameter(hidden = true) @AuthUser User user
     ) {
-        return ApiResponse.onSuccess(userCommandUseCase.checkOriginalPassword(request, user));
+        return ApiResponse.onSuccess(
+                userCommandUseCase.checkOriginalPassword(
+                        request,
+                        user
+                )
+        );
     }
 
     @Operation(summary = "회원가입 후 로그인", description =
@@ -154,8 +174,12 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.SignUpRequest request,
             @RequestParam(required = false) String token
     ) {
-        UserResponseDTO.LoginResponse response = userCommandUseCase.signupAndLoginAndInviteAccept(request, token);
 
-        return ApiResponse.onSuccess(response);
+        return ApiResponse.onSuccess(
+                userSignUpWorkflowUseCase.signUpAndLogin(
+                        request,
+                        token
+                )
+        );
     }
 }
