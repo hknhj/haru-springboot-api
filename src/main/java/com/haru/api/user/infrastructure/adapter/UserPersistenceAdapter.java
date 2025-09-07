@@ -38,4 +38,9 @@ public class UserPersistenceAdapter implements UserPort {
     public User saveUser(User user) {
         return userJpaRepository.save(user);
     }
+
+    @Override
+    public boolean existsUserByEmail(String email) {
+        return userJpaRepository.existsByEmail(email);
+    }
 }

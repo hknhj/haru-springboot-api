@@ -29,4 +29,9 @@ public interface UserPort {
      */
     User saveUser(User user);
 
+    /**
+     * 이메일이 존재하는지 확인한다.
+     */
+    boolean existsUserByEmail(String email);
+
 }

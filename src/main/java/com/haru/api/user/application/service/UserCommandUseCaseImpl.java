@@ -184,17 +184,14 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     public User createUser(UserRequestDTO.SignUpRequest request) {
 
         // 이메일 중복 확인
-        if (userPort.findUserByEmail(request.getEmail()).isPresent()) {
+        if (userPort.existsUserByEmail(request.getEmail())) {
             throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
         }
 
-        // 비밀번호 암호화
         String password = passwordEncoder.encode(request.getPassword());
 
-        // DTO를 User 도메인 객체로 변환
         User user = UserConverter.toUsers(request, password);
 
-        // 데이터베이스에 저장
         return userPort.saveUser(user);
     }
 }
