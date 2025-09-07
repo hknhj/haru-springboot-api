@@ -1,12 +1,12 @@
 package com.haru.api.user.application.service;
 
 import com.haru.api.user.application.converter.UserConverter;
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.EmailStatus;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.infra.security.jwt.JwtUtils;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.REFRESH_TOKEN_NOT_EQUAL;
@@ -38,8 +37,9 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     @Value("${jwt.refresh-expiration}")
     private int refreshExpTime;
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
     private final WorkspaceCommandUseCase workspaceCommandUseCase;
+
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtils jwtUtils;
@@ -60,11 +60,14 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
     @Override
     public UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request) {
+
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // jwt토큰(access token, refresh token) 생성
-        User getUser = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        User getUser = userPort.findUserByEmail(authentication.getName())
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+
         String key = "users:" + getUser.getId().toString();
         String accessToken = generateAccessToken(getUser.getId(), accessExpTime);
         String refreshToken = generateAndSaveRefreshToken(key, refreshExpTime);
@@ -95,6 +98,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
     @Override
     public void logout(String accessToken) {
+
         // 로그아웃시킬 회원의 refresh token redis에서 삭제
         Long userId = SecurityUtil.getCurrentUserId();
         String key = "users:" + userId;
@@ -104,12 +108,14 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
         key = "blackList:" + userId;
         long tokenRemainTimeSecond = jwtUtils.tokenRemainTimeSecond(accessToken);
         redisTemplate.opsForValue().set(key, accessToken, tokenRemainTimeSecond, TimeUnit.SECONDS);
+
     }
 
 
     @Transactional
     @Override
     public UserResponseDTO.User updateUserInfo(User user, UserRequestDTO.UserInfoUpdateRequest request) {
+
         // 이름 수정 요청이 있을 경우
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
             user.updateName(request.getName());
@@ -117,40 +123,47 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
         // 비밀번호 수정 요청이 있을 경우
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            // 1. 새로운 비밀번호가 이전 비밀번호와 동일한지 확인
+            // 새로운 비밀번호가 이전 비밀번호와 동일한지 확인
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 throw new MemberHandler(ErrorStatus.SAME_WITH_OLD_PASSWORD);
             }
 
-            // 2. 새로운 비밀번호로 업데이트
+            // 새로운 비밀번호로 업데이트
             user.updatePassword(passwordEncoder.encode(request.getPassword()));
         }
 
-        return UserConverter.toUserDTO(user);
+        return UserConverter.toUserDTO(userPort.saveUser(user));
     }
 
     @Override
     public String generateAccessToken(Long userId, int accessExpTime) {
+
         // 인증 완료 후 jwt토큰(accessToken) 생성
         Map<String, Object> valueMap = Map.of(
                 "userId", userId
         );
+
         return jwtUtils.generateToken(valueMap, accessExpTime);
     }
 
     @Override
     public String generateAndSaveRefreshToken(String key, int refreshExpTime) {
+
         // 인증 완료 후 jwt토큰(refreshToken) 생성
         String refreshToken = jwtUtils.generateToken(Collections.emptyMap(), refreshExpTime);
+
         redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.SECONDS);
+
         return refreshToken;
     }
 
     @Override
     public UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+
+        User user = userPort.findUserByEmail(request.getEmail())
                 .orElse(null);
-        if (user == null) {
+
+        if (user == null) { // 해당 이메일을 사용하고 있는 유저가 존재하지 않을 경우
             return UserResponseDTO.CheckEmailDuplicationResponse.builder()
                     .emailStatus(EmailStatus.AVAILABLE)
                     .build();
@@ -171,7 +184,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     public User createUser(UserRequestDTO.SignUpRequest request) {
 
         // 이메일 중복 확인
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userPort.findUserByEmail(request.getEmail()).isPresent()) {
             throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
         }
 
@@ -182,6 +195,6 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
         User user = UserConverter.toUsers(request, password);
 
         // 데이터베이스에 저장
-        return userRepository.save(user);
+        return userPort.saveUser(user);
     }
 }

@@ -1,11 +1,11 @@
 package com.haru.api.global.interceptor;
 
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.workspace.domain.enums.DocumentType;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.global.annotation.AuthDocument;
 import com.haru.api.global.annotation.AuthUser;
@@ -30,7 +30,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
 
     private final HashIdUtil hashIdUtil;
 
@@ -106,7 +106,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
             };
 
             // 유저 조회
-            User foundUser = userRepository.findById(userId)
+            User foundUser = userPort.findUserById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // request에 attribute 저장

@@ -1,5 +1,6 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.workspace.application.converter.UserDocumentLastOpenedConverter;
 import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.workspace.domain.Documentable;
@@ -9,7 +10,6 @@ import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
@@ -41,7 +41,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
 
-    private final UserRepository userRepository;
+    //private final UserJpaRepository userJpaRepository;
+    private final UserPort userPort;
     private final WorkspaceRepository workspaceRepository;
     private final UserWorkspaceRepository userWorkspaceRepository;
     private final WorkspaceInvitationRepository workspaceInvitationRepository;
@@ -130,7 +131,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
             throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
 
         // 초대받은 이메일로 가입된 사용자가 있는지 확인
-        Optional<User> foundUser = userRepository.findByEmail(foundWorkspaceInvitation.getEmail());
+        Optional<User> foundUser = userPort.findUserByEmail(foundWorkspaceInvitation.getEmail());
 
         boolean isAlreadyRegistered = foundUser.isPresent();
 

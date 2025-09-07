@@ -1,7 +1,7 @@
 package com.haru.api.infra.security.login;
 
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +15,11 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements CustomDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
 
     @Override
     public UserDetails loadUserByUsername(String email, String password) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = userPort.findUserByEmail(email)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_USERNAME_NOT_FOUND));
 
         org.springframework.security.core.userdetails.User securityUser = new org.springframework.security.core.userdetails.User(
