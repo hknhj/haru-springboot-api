@@ -1,6 +1,6 @@
 package com.haru.api.infra.security.googleOauth2;
 
-import com.haru.api.user.application.port.in.UserCommandUseCase;
+import com.haru.api.infra.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,13 +15,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    @Value("${jwt.access-expiration}")
-    private int accessExpTime;
-    @Value("${jwt.refresh-expiration}")
-    private int refreshExpTime;
     @Value("${google-login-frontend-url}")
     String baseUrl;
-    private final UserCommandUseCase userCommandUseCase;
+
+    private final JwtUtils jwtUtils;
 
     @Override
     public void onAuthenticationSuccess(
@@ -34,8 +31,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         // 회원가입이든 로그인이든 똑같이 프론트엔드로 리다이렉트
         Long userId = userDetails.getUser().getId();
         String key = "users:" + userId.toString();
-        String accessToken = userCommandUseCase.generateAccessToken(userId, accessExpTime);
-        String refreshToken = userCommandUseCase.generateAndSaveRefreshToken(key, refreshExpTime);
+        String accessToken = jwtUtils.generateAccessToken(userId);
+        String refreshToken = jwtUtils.generateAndSaveRefreshToken(key);
         // 프론트엔드 URL로 리다이렉트 (query param 전달)
         redirectUrl.append(baseUrl)
                 .append("?status=success")

@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +27,13 @@ public class JwtUtils {
 
     @Value("${jwt.secret}")
     public String secretKey;
+
+    @Value("${jwt.access-expiration}")
+    private int accessExpTime;
+
+    @Value("${jwt.refresh-expiration}")
+    private int refreshExpTime;
+
     private final RedisTemplate<String, String> redisTemplate;
 
     // 헤더에 "Bearer XXX" 형식으로 담겨온 토큰을 추출한다
@@ -148,5 +156,25 @@ public class JwtUtils {
                 throw new CustomJwtException(ErrorStatus.LOGOUT_USER);
             }
         }
+    }
+
+    public String generateAccessToken(Long userId) {
+
+        // 인증 완료 후 jwt토큰(accessToken) 생성
+        Map<String, Object> valueMap = Map.of(
+                "userId", userId
+        );
+
+        return generateToken(valueMap, accessExpTime);
+    }
+
+    public String generateAndSaveRefreshToken(String key) {
+
+        // 인증 완료 후 jwt토큰(refreshToken) 생성
+        String refreshToken = generateToken(Collections.emptyMap(), refreshExpTime);
+
+        redisTemplate.opsForValue().set(key, refreshToken, refreshExpTime, TimeUnit.SECONDS);
+
+        return refreshToken;
     }
 }

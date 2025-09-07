@@ -16,10 +16,6 @@ public interface UserCommandUseCase {
 
     void logout(String accessToken);
 
-    String generateAccessToken(Long userId, int accessExpTime);
-
-    String generateAndSaveRefreshToken(String key, int refreshExpTime);
-
     UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request);
 
     UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user);
