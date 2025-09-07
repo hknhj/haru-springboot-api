@@ -35,7 +35,7 @@ public class UserController {
             @RequestParam(required = false) String token
     ) {
         return ApiResponse.onSuccess(
-                userCommandUseCase.signUp(
+                userSignUpWorkflowUseCase.signUp(
                         request,
                         token
                 )

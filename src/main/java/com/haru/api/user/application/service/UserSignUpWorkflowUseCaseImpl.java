@@ -1,5 +1,6 @@
 package com.haru.api.user.application.service;
 
+import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.application.port.in.UserSignUpWorkflowUseCase;
 import com.haru.api.user.domain.User;
@@ -34,5 +35,18 @@ public class UserSignUpWorkflowUseCaseImpl implements UserSignUpWorkflowUseCase 
                 .build();
 
         return userCommandUseCase.login(loginRequest);
+    }
+
+    @Override
+    public UserResponseDTO.User signUp(UserRequestDTO.SignUpRequest request, String token) {
+
+        // 유저 생성 및 저장
+        User createdUser = userCommandUseCase.createUser(request);
+
+        // 초대 토큰이 있는 경우, 초대 수락 로직 호출
+        if (token != null)
+            workspaceCommandUseCase.acceptInvite(token, createdUser);
+
+        return UserConverter.toUserDTO(createdUser);
     }
 }
