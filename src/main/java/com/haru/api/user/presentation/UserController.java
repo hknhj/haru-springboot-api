@@ -150,7 +150,7 @@ public class UserController {
 
     @Operation(summary = "기존 비밀번호 일치 검사 [v1.0 (2025-08-12)]", description =
             "# [v1.0 (2025-08-12)](https://www.notion.so/24d5da7802c580c68535f3a5982d82d2)" +
-                    " 비밀번호 변경 시 기존 비밀버호가 일치하는지 확인하는 API입니다."
+                    " 비밀번호 변경 시 기존 비밀번호가 일치하는지 확인하는 API입니다."
     )
     @PostMapping("/password/check")
     public ApiResponse<UserResponseDTO.CheckOriginalPasswordResponse> checkOriginalPassword(
