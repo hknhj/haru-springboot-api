@@ -18,8 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -172,5 +171,74 @@ class UserCommandUseCaseImplTest {
 
         // then
         assertThat(response.getIsMatched()).isFalse();
+    }
+
+    @Test
+    @DisplayName("유저 정보 업데이트 성공")
+    void update_user_info() {
+
+        String originalName = "originalName";
+        String modifiedName = "modifiedName";
+
+        String originalPassword = "originalPassword";
+        String modifiedPassword = "modifiedPassword";
+        String encodedPassword = "encodedPassword";
+
+        // given
+        UserRequestDTO.UserInfoUpdateRequest request = UserRequestDTO.UserInfoUpdateRequest.builder()
+                .name(modifiedName)
+                .password(modifiedPassword)
+                .build();
+
+        User user = spy(User.builder()
+                .id(1L)
+                .name(originalName)
+                .password(originalPassword)
+                .build());
+
+        given(passwordEncoder.matches(modifiedPassword, originalPassword)).willReturn(false);
+        given(passwordEncoder.encode(request.getPassword())).willReturn(encodedPassword);
+        given(userPort.saveUser(user)).willReturn(user);
+
+        // when
+        UserResponseDTO.User response = userCommandUseCase.updateUserInfo(user, request);
+
+        // then
+        assertThat(response.getName()).isEqualTo(modifiedName);
+
+        // spy 객체에서 update 메서드가 실행되었는지 확인 (mock 객체였으면 확인 불가능)
+        verify(user, times(1)).updateName(modifiedName);
+        verify(user, times(1)).updatePassword(encodedPassword);
+
+        verify(passwordEncoder, times(1)).encode(modifiedPassword);
+        verify(userPort, times(1)).saveUser(user);
+    }
+
+    @Test
+    @DisplayName("유저 정보 업데이트 실패 - 기존 비밀번호와 변경하고자 하는 비밀번호 일치")
+    void update_user_info_fail() {
+
+        String originalName = "originalName";
+        String modifiedName = "modifiedName";
+
+        String originalPassword = "originalPassword";
+
+        // given
+        UserRequestDTO.UserInfoUpdateRequest request = UserRequestDTO.UserInfoUpdateRequest.builder()
+                .name(modifiedName)
+                .password(originalPassword)
+                .build();
+
+        User originalUser = User.builder()
+                .name(originalName)
+                .password(originalPassword)
+                .build();
+
+        given(passwordEncoder.matches(request.getPassword(), originalUser.getPassword())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userCommandUseCase.updateUserInfo(originalUser, request))
+                .isInstanceOf(MemberHandler.class)
+                .hasMessageContaining(ErrorStatus.SAME_WITH_OLD_PASSWORD.getMessage());
     }
 }
