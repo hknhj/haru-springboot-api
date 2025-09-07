@@ -125,4 +125,52 @@ class UserCommandUseCaseImplTest {
 
         verify(userPort, times(1)).existsUserByEmail(request.getEmail());
     }
+
+    @Test
+    @DisplayName("기존 비밀번호 일치 - 일치 O")
+    void check_original_password_with_right_password() {
+
+        // given
+        String plainPassword = "originalPassword";
+        String encodedPassword = "encodedPassword";
+
+        UserRequestDTO.CheckOriginalPasswordRequest request = UserRequestDTO.CheckOriginalPasswordRequest.builder()
+                .requestPassword(plainPassword)
+                .build();
+        User savedUser = User.builder()
+                .password(encodedPassword)
+                .build();
+
+        given(passwordEncoder.matches(plainPassword, encodedPassword)).willReturn(true);
+
+        // when
+        UserResponseDTO.CheckOriginalPasswordResponse response = userCommandUseCase.checkOriginalPassword(request, savedUser);
+
+        // then
+        assertThat(response.getIsMatched()).isTrue();
+    }
+
+    @Test
+    @DisplayName("기존 비밀번호 일치 - 일치 X")
+    void check_original_password_with_wrong_password() {
+
+        // given
+        String wrongPassword = "wrongPassword";
+        String encodedPassword = "encodedPassword";
+
+        UserRequestDTO.CheckOriginalPasswordRequest request = UserRequestDTO.CheckOriginalPasswordRequest.builder()
+                .requestPassword(wrongPassword)
+                .build();
+        User savedUser = User.builder()
+                .password(encodedPassword)
+                .build();
+
+        given(passwordEncoder.matches(wrongPassword, encodedPassword)).willReturn(false);
+
+        // when
+        UserResponseDTO.CheckOriginalPasswordResponse response = userCommandUseCase.checkOriginalPassword(request, savedUser);
+
+        // then
+        assertThat(response.getIsMatched()).isFalse();
+    }
 }
