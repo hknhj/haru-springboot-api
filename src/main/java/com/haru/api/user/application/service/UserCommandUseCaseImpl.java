@@ -65,10 +65,9 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     @Override
     public UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request) {
 
-        User user = userPort.findUserByEmail(request.getEmail())
-                .orElse(null);
+        boolean isDuplicate = userPort.existsUserByEmail(request.getEmail());
 
-        if (user == null) { // 해당 이메일을 사용하고 있는 유저가 존재하지 않을 경우
+        if (!isDuplicate) { // 해당 이메일을 사용하고 있는 유저가 존재하지 않을 경우
             return UserResponseDTO.CheckEmailDuplicationResponse.builder()
                     .emailStatus(EmailStatus.AVAILABLE)
                     .build();
