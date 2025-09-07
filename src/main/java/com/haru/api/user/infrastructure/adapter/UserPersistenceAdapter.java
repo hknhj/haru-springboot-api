@@ -1,0 +1,41 @@
+package com.haru.api.user.infrastructure.adapter;
+
+import com.haru.api.user.application.port.out.UserPort;
+import com.haru.api.user.domain.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class UserPersistenceAdapter implements UserPort {
+
+    private final UserJpaRepository userJpaRepository;
+
+    @Override
+    public Optional<User> findUserById(Long id) {
+        return userJpaRepository.findById(id);
+    }
+
+    @Override
+    public List<User> searchSimilarEmailUsers(String emailKeyword) {
+        return userJpaRepository.findTop4UsersByEmailContainingIgnoreCase(emailKeyword);
+    }
+
+    @Override
+    public Optional<User> findUserByEmail(String email) {
+        return userJpaRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findUserByProviderId(String providerId) {
+        return userJpaRepository.findByProviderId(providerId);
+    }
+
+    @Override
+    public User saveUser(User user) {
+        return userJpaRepository.save(user);
+    }
+}

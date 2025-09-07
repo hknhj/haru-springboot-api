@@ -1,10 +1,10 @@
 package com.haru.api.user.application.service;
 
 import com.haru.api.user.application.converter.UserConverter;
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserQueryUseCaseImpl implements UserQueryUseCase {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
 
     @Override
     public UserResponseDTO.User getUserInfo(User user) {
@@ -25,7 +25,7 @@ public class UserQueryUseCaseImpl implements UserQueryUseCase {
     @Override
     public List<UserResponseDTO.User> getSimilarEmailUsers(User user, String email) {
 
-        List<User> users = userRepository.findTop4UsersByEmailContainingIgnoreCase(email);
+        List<User> users = userPort.searchSimilarEmailUsers(email);
 
         return users.parallelStream()
                 .map(eachUser -> UserResponseDTO.User.builder()

@@ -1,7 +1,7 @@
 package com.haru.api.global.interceptor;
 
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
 import com.haru.api.workspace.domain.Workspace;
@@ -26,7 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WorkspaceMemberAuthInterceptor implements HandlerInterceptor {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
 
     private final UserWorkspaceRepository userWorkspaceRepository;
 
@@ -72,7 +72,7 @@ public class WorkspaceMemberAuthInterceptor implements HandlerInterceptor {
             final Long userId = SecurityUtil.getCurrentUserId();
 
             // 유저 조회
-            User foundUser = userRepository.findById(userId)
+            User foundUser = userPort.findUserById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // 워크스페이스 조회

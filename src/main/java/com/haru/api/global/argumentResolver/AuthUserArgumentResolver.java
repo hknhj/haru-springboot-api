@@ -1,7 +1,7 @@
 package com.haru.api.global.argumentResolver;
 
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.infrastructure.UserRepository;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -18,7 +18,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @RequiredArgsConstructor
 public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -40,7 +40,7 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
             Long userId = SecurityUtil.getCurrentUserId();
 
             // 해당 유저가 존재하는지 확인하고, 존재하면 해당 user 객체 반환
-            return userRepository.findById(userId)
+            return userPort.findUserById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
         }
     }
