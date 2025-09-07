@@ -6,8 +6,6 @@ import com.haru.api.user.domain.User;
 
 public interface UserCommandUseCase {
 
-    UserResponseDTO.User signUp(UserRequestDTO.SignUpRequest request, String token);
-
     UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request);
 
     UserResponseDTO.User updateUserInfo(User user, UserRequestDTO.UserInfoUpdateRequest request);

@@ -8,7 +8,6 @@ import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.EmailStatus;
-import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
@@ -22,22 +21,8 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
     private final UserPort userPort;
     private final AuthPort authPort;
-    private final WorkspaceCommandUseCase workspaceCommandUseCase;
 
     private final PasswordEncoder passwordEncoder;
-
-    @Override
-    public UserResponseDTO.User signUp(UserRequestDTO.SignUpRequest request, String token) {
-
-        // 유저 생성 및 저장
-        User createdUser = createUser(request);
-
-        // 초대 토큰이 있는 경우, 초대 수락 로직 호출
-        if (token != null)
-            workspaceCommandUseCase.acceptInvite(token, createdUser);
-
-        return UserConverter.toUserDTO(createdUser);
-    }
 
     @Override
     public UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request) {
@@ -98,7 +83,6 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     public UserResponseDTO.CheckOriginalPasswordResponse checkOriginalPassword(UserRequestDTO.CheckOriginalPasswordRequest request, User user) {
         return UserConverter.toCheckOriginalPassword(passwordEncoder.matches(request.getRequestPassword(), user.getPassword()));
     }
-
 
     @Override
     public User createUser(UserRequestDTO.SignUpRequest request) {
