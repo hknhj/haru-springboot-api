@@ -21,6 +21,7 @@ public class UserConverter {
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
+                .imageUrl(user.getProfileImage())
                 .build();
     }
 
