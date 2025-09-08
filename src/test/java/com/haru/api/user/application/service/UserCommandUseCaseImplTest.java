@@ -2,6 +2,7 @@ package com.haru.api.user.application.service;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.user.application.port.out.AuthPort;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.EmailStatus;
@@ -29,6 +30,9 @@ class UserCommandUseCaseImplTest {
 
     @Mock
     private UserPort userPort;
+
+    @Mock
+    private AuthPort authPort;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -240,5 +244,31 @@ class UserCommandUseCaseImplTest {
         assertThatThrownBy(() -> userCommandUseCase.updateUserInfo(originalUser, request))
                 .isInstanceOf(MemberHandler.class)
                 .hasMessageContaining(ErrorStatus.SAME_WITH_OLD_PASSWORD.getMessage());
+    }
+
+    @Test
+    @DisplayName("로그인 성공")
+    void login() {
+
+        // given
+        UserRequestDTO.LoginRequest request = UserRequestDTO.LoginRequest.builder()
+                .email("test@nate.com")
+                .password("testPassword")
+                .build();
+        UserResponseDTO.LoginResponse expectedResponse = UserResponseDTO.LoginResponse.builder()
+                .userId(1L)
+                .accessToken("testAccessToken")
+                .refreshToken("testRefreshToken")
+                .build();
+
+        given(authPort.login(request)).willReturn(expectedResponse);
+
+        // when
+        UserResponseDTO.LoginResponse actualResponse = userCommandUseCase.login(request);
+
+        // then
+        assertThat(expectedResponse).isEqualTo(actualResponse);
+
+        verify(authPort, times(1)).login(request);
     }
 }
