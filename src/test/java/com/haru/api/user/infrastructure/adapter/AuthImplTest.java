@@ -3,6 +3,7 @@ package com.haru.api.user.infrastructure.adapter;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.infra.security.jwt.JwtUtils;
+import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
@@ -12,13 +13,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -43,6 +48,12 @@ class AuthImplTest {
 
     @Mock
     private JwtUtils jwtUtils;
+
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
 
     @Test
     @DisplayName("로그인 성공")
@@ -127,5 +138,36 @@ class AuthImplTest {
         assertThatThrownBy(() -> authPort.login(request))
                 .isInstanceOf(MemberHandler.class)
                 .hasMessageContaining("비밀번호가 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공")
+    void logout() {
+
+        // given
+        String accessToken = "fakeAccessToken";
+        Long fakeUserId = 1L;
+        long tokenRemainTime = 1800L;
+
+        MockedStatic<SecurityUtil> mockSecurityUtil = mockStatic(SecurityUtil.class);
+        mockSecurityUtil.when(SecurityUtil::getCurrentUserId).thenReturn(fakeUserId);
+
+        given(redisTemplate.delete(any(String.class))).willReturn(true);
+        given(jwtUtils.tokenRemainTimeSecond(accessToken)).willReturn(tokenRemainTime);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // when
+        authPort.logout(accessToken);
+
+        // then
+        mockSecurityUtil.verify(SecurityUtil::getCurrentUserId);
+        verify(redisTemplate).delete("users:"+fakeUserId);
+        verify(jwtUtils).tokenRemainTimeSecond(accessToken);
+        verify(valueOperations).set(
+                "blackList:" + fakeUserId,
+                accessToken,
+                tokenRemainTime,
+                TimeUnit.SECONDS
+        );
     }
 }

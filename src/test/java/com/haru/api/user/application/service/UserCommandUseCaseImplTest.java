@@ -271,4 +271,18 @@ class UserCommandUseCaseImplTest {
 
         verify(authPort, times(1)).login(request);
     }
+
+    @Test
+    @DisplayName("로그아웃 성공")
+    void logout() {
+
+        // given
+        String accessToken = "logoutAccessToken";
+
+        // when
+        authPort.logout(accessToken);
+
+        // then
+        verify(authPort, times(1)).logout(accessToken);
+    }
 }
