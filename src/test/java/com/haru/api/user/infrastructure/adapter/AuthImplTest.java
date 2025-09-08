@@ -8,6 +8,8 @@ import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +56,19 @@ class AuthImplTest {
 
     @Mock
     private ValueOperations<String, String> valueOperations;
+
+    private MockedStatic<SecurityUtil> mockSecurityUtil;
+
+    @BeforeEach
+    void setUp() {
+        mockSecurityUtil = mockStatic(SecurityUtil.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 매 테스트 후 정적 메서드 Mocking 해제
+        mockSecurityUtil.close();
+    }
 
     @Test
     @DisplayName("로그인 성공")
@@ -149,7 +164,6 @@ class AuthImplTest {
         Long fakeUserId = 1L;
         long tokenRemainTime = 1800L;
 
-        MockedStatic<SecurityUtil> mockSecurityUtil = mockStatic(SecurityUtil.class);
         mockSecurityUtil.when(SecurityUtil::getCurrentUserId).thenReturn(fakeUserId);
 
         given(redisTemplate.delete(any(String.class))).willReturn(true);
@@ -161,7 +175,7 @@ class AuthImplTest {
 
         // then
         mockSecurityUtil.verify(SecurityUtil::getCurrentUserId);
-        verify(redisTemplate).delete("users:"+fakeUserId);
+        verify(redisTemplate).delete("users:" + fakeUserId);
         verify(jwtUtils).tokenRemainTimeSecond(accessToken);
         verify(valueOperations).set(
                 "blackList:" + fakeUserId,
@@ -169,5 +183,58 @@ class AuthImplTest {
                 tokenRemainTime,
                 TimeUnit.SECONDS
         );
+    }
+
+    @Test
+    @DisplayName("access token 갱신 성공")
+    void refresh_token() {
+
+        // given
+        String refreshToken = "fakeRefreshToken";
+        String accessToken = "fakeAccessToken";
+        String newRefreshToken = "fakeNewRefreshToken";
+        Long fakeUserId = 1L;
+
+        mockSecurityUtil.when(SecurityUtil::getCurrentUserId).thenReturn(fakeUserId);
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(any(String.class))).willReturn(refreshToken);
+        given(jwtUtils.generateAccessToken(any(Long.class))).willReturn(accessToken);
+        given(jwtUtils.generateAndSaveRefreshToken(any(String.class))).willReturn(newRefreshToken);
+
+        // when
+        UserResponseDTO.RefreshResponse response = authPort.refresh(refreshToken);
+
+        // then
+        assertThat(response.getUserId()).isEqualTo(fakeUserId);
+        assertThat(response.getAccessToken()).isEqualTo(accessToken);
+        assertThat(response.getRefreshToken()).isEqualTo(newRefreshToken);
+
+        verify(valueOperations).get("users:" + fakeUserId);
+        verify(jwtUtils).generateAccessToken(fakeUserId);
+        verify(jwtUtils).generateAndSaveRefreshToken("users:" + fakeUserId);
+    }
+
+    @Test
+    @DisplayName("access token 갱신 실패 - 유효하지 않은 refresh token")
+    void refresh_token_fail_with_invalid_refresh_token() {
+
+        // given
+        String refreshToken = "fakeRefreshToken";
+        String wrongRefreshToken = "fakeWrongRefreshToken";
+        Long fakeUserId = 1L;
+
+        mockSecurityUtil.when(SecurityUtil::getCurrentUserId).thenReturn(fakeUserId);
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(any(String.class))).willReturn(wrongRefreshToken);
+
+        // when & then
+        assertThatThrownBy(() -> authPort.refresh(refreshToken))
+                .isInstanceOf(MemberHandler.class)
+                .hasMessageContaining("리프레시 토큰이 일치하지 않습니다.");
+
+        verify(jwtUtils, never()).generateAccessToken(anyLong());
+        verify(jwtUtils, never()).generateAndSaveRefreshToken(anyString());
     }
 }

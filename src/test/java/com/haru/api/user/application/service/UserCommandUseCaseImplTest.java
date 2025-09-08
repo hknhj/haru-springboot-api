@@ -285,4 +285,18 @@ class UserCommandUseCaseImplTest {
         // then
         verify(authPort, times(1)).logout(accessToken);
     }
+
+    @Test
+    @DisplayName("access token 갱신 성공")
+    void refresh_token() {
+
+        // given
+        String refreshToken = "refreshToken";
+
+        // when
+        authPort.refresh(refreshToken);
+
+        // then
+        verify(authPort, times(1)).refresh(refreshToken);
+    }
 }
