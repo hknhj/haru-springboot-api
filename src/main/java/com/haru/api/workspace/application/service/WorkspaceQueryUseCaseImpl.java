@@ -2,7 +2,7 @@ package com.haru.api.workspace.application.service;
 
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.domain.MoodTracker;
@@ -12,7 +12,7 @@ import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.application.converter.WorkspaceConverter;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import com.haru.api.workspace.domain.Workspace;
@@ -35,15 +35,15 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     private final MeetingRepository meetingRepository;
     private final SnsEventRepository snsEventRepository;
     private final MoodTrackerRepository moodTrackerRepository;
-    private final UserWorkspaceRepository userWorkspaceRepository;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
+    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
     private final WorkspaceConverter workspaceConverter;
     private final AmazonS3Manager amazonS3Manager;
 
     @Override
     public WorkspaceResponseDTO.DocumentList getDocuments(User user, Workspace workspace, String title) {
 
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findRecentDocumentsByTitle(workspace.getId(), user.getId(), title);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedJpaRepository.findRecentDocumentsByTitle(user.getId(), workspace.getId(), title);
 
         return WorkspaceConverter.toDocumentList(
                 documentList.stream()
@@ -56,7 +56,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     public WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(User user, Workspace workspace) {
 
         // 유저가 가장 최근에 조회한 문서 5개 추출
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedRepository.findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(workspace.getId(), user.getId());
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedJpaRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
 
         return WorkspaceConverter.toDocumentSidebarList(
                 documentList.stream()
@@ -83,7 +83,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     @Override
     public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace) {
 
-        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceRepository.findUsersByWorkspaceId(workspace.getId()).stream()
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceJpaRepository.findUsersByWorkspaceId(workspace.getId()).stream()
                 .map(UserConverter::toMemberInfo)
                 .toList();
 
@@ -95,7 +95,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     @Override
     public WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace) {
 
-        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
+        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedJpaRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
 
         return workspaceConverter.toRecentDocumentList(
                 recentDocumentList.stream()

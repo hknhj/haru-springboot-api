@@ -5,21 +5,21 @@ import com.haru.api.workspace.application.converter.UserDocumentLastOpenedConver
 import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.workspace.domain.Documentable;
 import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.domain.UserWorkspace;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.application.converter.WorkspaceConverter;
 import com.haru.api.workspace.presentation.dto.WorkspaceRequestDTO;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.workspace.domain.WorkspaceInvitation;
-import com.haru.api.workspace.infrastructure.WorkspaceInvitationRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceInvitationJpaRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
@@ -41,15 +41,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
 
-    //private final UserJpaRepository userJpaRepository;
     private final UserPort userPort;
-    private final WorkspaceRepository workspaceRepository;
-    private final UserWorkspaceRepository userWorkspaceRepository;
-    private final WorkspaceInvitationRepository workspaceInvitationRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
+    private final WorkspaceInvitationJpaRepository workspaceInvitationJpaRepository;
     private final MeetingRepository meetingRepository;
     private final SnsEventRepository snsEventRepository;
     private final MoodTrackerRepository moodTrackerRepository;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
 
     private final AmazonS3Manager amazonS3Manager;
 
@@ -71,13 +70,13 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         }
 
         // workspace entity 생성
-        Workspace workspace = workspaceRepository.save(Workspace.builder()
+        Workspace workspace = workspaceJpaRepository.save(Workspace.builder()
                 .title(request.getTitle())
                 .keyName(keyName)
                 .build());
 
         // users_workspaces 테이블에 생성자 정보 저장
-        userWorkspaceRepository.save(UserWorkspace.builder()
+        userWorkspaceJpaRepository.save(UserWorkspace.builder()
                 .user(user)
                 .workspace(workspace)
                 .auth(Auth.ADMIN)
@@ -90,7 +89,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
     @Override
     public WorkspaceResponseDTO.Workspace updateWorkspace(User user, Workspace workspace, WorkspaceRequestDTO.WorkspaceUpdateRequest request, MultipartFile image) {
 
-        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
+        UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if(userWorkspace.getAuth() != Auth.ADMIN)
@@ -111,7 +110,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
             amazonS3Manager.uploadMultipartFile(keyName, image);
         }
 
-        workspaceRepository.save(workspace);
+        workspaceJpaRepository.save(workspace);
 
         return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(workspace.getKeyName()));
     }
@@ -120,10 +119,10 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
     @Transactional
     public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
 
-        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationJpaRepository.findByToken(token)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
-        Workspace foundWorkspace = workspaceRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         // 이미 수락된 초대장이면 예외 발생
@@ -145,7 +144,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         }
 
         // 가입된 사용자인 경우 워크스페이스에 추가
-        userWorkspaceRepository.save(UserWorkspace.builder()
+        userWorkspaceJpaRepository.save(UserWorkspace.builder()
                 .workspace(foundWorkspace)
                 .user(foundUser.get())
                 .auth(Auth.MEMBER)
@@ -157,7 +156,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
         // last_opened는 null
         if (!userDocumentLastOpenedList.isEmpty()) {
-            userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
+            userDocumentLastOpenedJpaRepository.saveAll(userDocumentLastOpenedList);
         }
 
         return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
@@ -166,10 +165,10 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
     @Transactional
     @Override
     public  WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token, User signedUser) {
-        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationRepository.findByToken(token)
+        WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationJpaRepository.findByToken(token)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
-        Workspace foundWorkspace = workspaceRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(foundWorkspaceInvitation.getWorkspace().getId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         if(foundWorkspaceInvitation.isAccepted())
@@ -178,7 +177,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         foundWorkspaceInvitation.setAccepted();
 
         // 가입된 사용자인 경우 워크스페이스에 추가
-        userWorkspaceRepository.save(UserWorkspace.builder()
+        userWorkspaceJpaRepository.save(UserWorkspace.builder()
                 .workspace(foundWorkspace)
                 .user(signedUser) // 인자로 받은 User 객체 사용
                 .auth(Auth.MEMBER)
@@ -190,7 +189,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         // 워크스페이스에 속해있는 모든 문서를 user_document_last_opened에 추가
         // last_opened는 null
         userDocumentLastOpenedList.forEach(userDocumentLastOpened -> {
-            userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
+            userDocumentLastOpenedJpaRepository.saveAll(userDocumentLastOpenedList);
         });
 
         return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
@@ -202,10 +201,10 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         Long workspaceId = request.getWorkspaceId();
         List<String> emails = request.getEmails();
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+        Workspace foundWorkspace = workspaceJpaRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        userWorkspaceRepository.findByUserAndWorkspace(user, foundWorkspace)
+        userWorkspaceJpaRepository.findByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 이메일마다 invitation 생성하여 저장, 초대 수락 토큰 생성, 초대 이메일 발송
@@ -218,7 +217,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
                     .token(token)
                     .isAccepted(false)
                     .build();
-            workspaceInvitationRepository.save(workspaceInvitation);
+            workspaceInvitationJpaRepository.save(workspaceInvitation);
 
             String invitationLink = inviteBaseUrl + "?token=" + token;
 
@@ -242,7 +241,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         for(Documentable documentable : documentList)
             userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(documentable, user));
 
-        userDocumentLastOpenedRepository.saveAll(userDocumentLastOpenedList);
+        userDocumentLastOpenedJpaRepository.saveAll(userDocumentLastOpenedList);
 
         return userDocumentLastOpenedList;
     }

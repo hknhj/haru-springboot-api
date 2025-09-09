@@ -1,7 +1,7 @@
 package com.haru.api.global.argumentResolver;
 
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
@@ -21,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthWorkspaceArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -52,7 +52,7 @@ public class AuthWorkspaceArgumentResolver implements HandlerMethodArgumentResol
             final String workspaceId = pathVariables.get("workspaceId");
 
             // workspace 존재하는지 확인하고, 존재한다면 해당 workspace 객체 반환
-            return workspaceRepository.findById(Long.parseLong(workspaceId))
+            return workspaceJpaRepository.findById(Long.parseLong(workspaceId))
                     .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         }

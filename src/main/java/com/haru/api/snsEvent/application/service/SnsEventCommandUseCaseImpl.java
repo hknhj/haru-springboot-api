@@ -17,9 +17,9 @@ import com.haru.api.snsEvent.infrastructure.WinnerRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
@@ -58,8 +58,8 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     private final SpringTemplateEngine templateEngine;
 
     private final SnsEventRepository snsEventRepository;
-    private final WorkspaceRepository workspaceRepository;
-    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
@@ -79,7 +79,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.CreateSnsRequest request
     ) {
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
                 .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
 
         // SNS 이벤트 생성 및 저장
@@ -176,7 +176,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
@@ -211,7 +211,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         }
         // 4. 워크스페이스에 인스타그램 계정 정보 저장
         String instagramId = (String) userInfo.get("user_id");
-        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
                 .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
         if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
             throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
@@ -231,7 +231,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.UpdateSnsEventRequest request
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
@@ -250,7 +250,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
 
         // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
+        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
         userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
     }
 
@@ -262,7 +262,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEvent snsEvent
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)

@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.application.service;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.domain.MoodTracker;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.util.HashIdUtil;
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MoodTrackerMailUseCaseImpl implements MoodTrackerMailUseCase {
 
-    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
     private final MoodTrackerRepository moodTrackerRepository;
     private final EmailSender emailSender;
 
@@ -40,7 +40,7 @@ public class MoodTrackerMailUseCaseImpl implements MoodTrackerMailUseCase {
         String surveyLink = surveyBaseUrl + "/" + hashIdUtil.encode(moodTrackerId);
 
         Long workspaceId = foundMoodTracker.getWorkspace().getId();
-        List<String> foundEmails = userWorkspaceRepository.findEmailsByWorkspaceId(workspaceId);
+        List<String> foundEmails = userWorkspaceJpaRepository.findEmailsByWorkspaceId(workspaceId);
 
         for (String email : foundEmails) {
             String htmlContent = buildHtmlEmail(mailContent, surveyLink);

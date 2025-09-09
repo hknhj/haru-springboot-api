@@ -1,4 +1,4 @@
-package com.haru.api.workspace.infrastructure;
+package com.haru.api.workspace.infrastructure.jpa;
 
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.presentation.dto.UserWorkspaceResponseDTO;
@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Long> {
+public interface UserWorkspaceJpaRepository extends JpaRepository<UserWorkspace, Long> {
 
     @Query("SELECT new com.haru.api.workspace.presentation.dto.UserWorkspaceResponseDTO$UserWorkspaceWithTitle(" +
             "uw.workspace.id, " +
@@ -29,8 +29,6 @@ public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Lo
     Boolean existsByUserIdAndWorkspaceId(Long userId, Long workspaceId);
 
     Optional<UserWorkspace> findByWorkspaceIdAndUserId(Long workspaceId, Long userId);
-
-    Optional<UserWorkspace> findByUserAndWorkspace(User user, Workspace workspace);
 
     Optional<UserWorkspace> findByUserIdAndWorkspaceId(Long userId, Long workspaceId);
 

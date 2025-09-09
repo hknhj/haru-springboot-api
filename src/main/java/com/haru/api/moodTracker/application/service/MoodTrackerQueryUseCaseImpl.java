@@ -13,7 +13,7 @@ import com.haru.api.moodTracker.domain.enums.MoodTrackerVisibility;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
     private final MoodTrackerRepository moodTrackerRepository;
 
-    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
 
     private final HashIdUtil hashIdUtil;
 
@@ -45,7 +45,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
     @Override
     public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 모든 분위기 트래커 조회
@@ -102,7 +102,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
         userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
-        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
+        UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
                 moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
@@ -141,7 +141,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
         userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
-        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
+        UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
                 moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 

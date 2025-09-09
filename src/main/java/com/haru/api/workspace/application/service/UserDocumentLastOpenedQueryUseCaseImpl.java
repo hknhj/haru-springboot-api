@@ -5,7 +5,7 @@ import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUse
 import com.haru.api.workspace.domain.Documentable;
 import com.haru.api.workspace.domain.UserDocumentId;
 import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
@@ -25,15 +25,14 @@ import java.util.List;
 @Slf4j
 public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastOpenedQueryUseCase {
 
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
-    //private final UserJpaRepository userJpaRepository;
+    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
     private final UserPort userPort;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateLastOpened(UserDocumentId userDocumentId, Long workspaceId, String title) {
 
-        UserDocumentLastOpened record = userDocumentLastOpenedRepository.findById(userDocumentId)
+        UserDocumentLastOpened record = userDocumentLastOpenedJpaRepository.findById(userDocumentId)
                 .orElseGet(() -> {
                     User foundUser = userPort.findUserById(userDocumentId.getUserId())
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
@@ -46,7 +45,7 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
                 });
 
         record.updateLastOpened(LocalDateTime.now());
-        userDocumentLastOpenedRepository.save(record);
+        userDocumentLastOpenedJpaRepository.save(record);
 
         log.info("userDocumentLastOpened updated for userId: {}, documentId:{}, workspaceId:{}, title:{}", record.getUser().getId(), record.getId().getDocumentId(), workspaceId, title);
     }
@@ -60,7 +59,7 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
 
         // 전체 save
         if (!recordsToSave.isEmpty()) {
-            userDocumentLastOpenedRepository.saveAll(recordsToSave);
+            userDocumentLastOpenedJpaRepository.saveAll(recordsToSave);
         }
     }
 
@@ -68,10 +67,10 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
     public void deleteRecordsForWorkspaceUsers(Documentable documentable) {
 
         // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
-            userDocumentLastOpenedRepository.deleteAllInBatch(recordsToUpdate);
+            userDocumentLastOpenedJpaRepository.deleteAllInBatch(recordsToUpdate);
         }
 
     }
@@ -81,7 +80,7 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
     public void updateRecordsForWorkspaceUsers(Documentable documentable, TitleHolder titleHolder) {
 
         // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
             for (UserDocumentLastOpened record : recordsToUpdate) {
@@ -119,24 +118,11 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
     @Transactional
     public void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder) {
         // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
         if (!recordsToUpdate.isEmpty()) {
             for (UserDocumentLastOpened record : recordsToUpdate) {
                 record.updateTitle(titleHolder.getTitle());
-                record.updateThumbnailKeyName(documentable.getThumbnailKeyName());
-            }
-        }
-    }
-
-    @Override
-    @Transactional
-    public void updateRecordsThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable) {
-        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
-
-        if (!recordsToUpdate.isEmpty()) {
-            for (UserDocumentLastOpened record : recordsToUpdate) {
                 record.updateThumbnailKeyName(documentable.getThumbnailKeyName());
             }
         }

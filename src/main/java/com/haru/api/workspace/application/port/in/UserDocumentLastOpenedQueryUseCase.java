@@ -19,5 +19,4 @@ public interface UserDocumentLastOpenedQueryUseCase {
 
     void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder);
 
-    void updateRecordsThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable);
 }
