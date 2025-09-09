@@ -1,6 +1,6 @@
-package com.haru.api.workspace.domain;
+package com.haru.api.global.common;
 
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 
 public interface Documentable {
     Long getId();

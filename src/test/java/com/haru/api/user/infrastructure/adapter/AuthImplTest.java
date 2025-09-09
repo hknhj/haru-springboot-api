@@ -5,6 +5,7 @@ import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.infra.security.jwt.JwtUtils;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.user.application.port.out.UserPort;
+import com.haru.api.user.application.service.AuthImpl;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
@@ -95,7 +96,7 @@ class AuthImplTest {
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).willReturn(authentication);
         given(authentication.getName()).willReturn(fakeUser.getEmail());
 
-        given(userPort.findUserByEmail(testEmail)).willReturn(Optional.of(fakeUser));
+        given(userPort.findByEmail(testEmail)).willReturn(Optional.of(fakeUser));
         given(jwtUtils.generateAccessToken(fakeUser.getId())).willReturn(fakeAccessToken);
         given(jwtUtils.generateAndSaveRefreshToken(any(String.class))).willReturn(fakeRefreshToken);
 
@@ -108,7 +109,7 @@ class AuthImplTest {
         assertThat(response.getRefreshToken()).isEqualTo(fakeRefreshToken);
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(userPort).findUserByEmail(fakeUser.getEmail());
+        verify(userPort).findByEmail(fakeUser.getEmail());
         verify(jwtUtils).generateAccessToken(fakeUser.getId());
 
     }

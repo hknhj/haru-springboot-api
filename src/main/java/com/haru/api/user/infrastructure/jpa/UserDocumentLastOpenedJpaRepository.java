@@ -1,8 +1,8 @@
-package com.haru.api.workspace.infrastructure;
+package com.haru.api.user.infrastructure.jpa;
 
-import com.haru.api.workspace.domain.UserDocumentId;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.UserDocumentId;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,12 +10,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocumentLastOpened, Long> {
+public interface UserDocumentLastOpenedJpaRepository extends JpaRepository<UserDocumentLastOpened, Long> {
+
     Optional<UserDocumentLastOpened> findById(UserDocumentId id);
 
-    List<UserDocumentLastOpened> findTop5ByWorkspaceIdAndUserIdOrderByLastOpenedDesc(Long workspaceId, Long userId);
-
-    @Query("SELECT udlo FROM UserDocumentLastOpened udlo " +
+    @Query("SELECT udlo " +
+            "FROM UserDocumentLastOpened udlo " +
             "WHERE udlo.user.id = :userId " +
             "AND udlo.workspaceId = :workspaceId " +
             "ORDER BY udlo.lastOpened DESC NULLS LAST, udlo.id.documentId DESC")
@@ -26,8 +26,11 @@ public interface UserDocumentLastOpenedRepository extends JpaRepository<UserDocu
             "WHERE udlo.workspaceId = :workspaceId AND udlo.id.userId = :userId " +
             "AND udlo.title LIKE %:title% " +
             "ORDER BY udlo.lastOpened DESC")
-    List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long workspaceId, Long userId, String title);
+    List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long userId, Long workspaceId, String title);
 
-    @Query("SELECT lo FROM UserDocumentLastOpened lo WHERE lo.id.documentId = :documentId AND lo.id.documentType = :documentType")
+    @Query("SELECT udlo " +
+            "FROM UserDocumentLastOpened udlo " +
+            "WHERE udlo.id.documentId = :documentId " +
+            "AND udlo.id.documentType = :documentType")
     List<UserDocumentLastOpened> findByDocumentIdAndDocumentType(Long documentId, DocumentType documentType);
 }

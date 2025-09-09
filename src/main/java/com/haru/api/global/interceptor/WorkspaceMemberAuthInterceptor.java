@@ -3,9 +3,9 @@ package com.haru.api.global.interceptor;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
 import com.haru.api.infra.security.jwt.SecurityUtil;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.AuthUser;
 import com.haru.api.global.annotation.AuthWorkspace;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -28,9 +28,9 @@ public class WorkspaceMemberAuthInterceptor implements HandlerInterceptor {
 
     private final UserPort userPort;
 
-    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
 
-    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
@@ -72,15 +72,15 @@ public class WorkspaceMemberAuthInterceptor implements HandlerInterceptor {
             final Long userId = SecurityUtil.getCurrentUserId();
 
             // 유저 조회
-            User foundUser = userPort.findUserById(userId)
+            User foundUser = userPort.findById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // 워크스페이스 조회
-            Workspace foundWorkspace = workspaceRepository.findById(Long.parseLong(workspaceId))
+            Workspace foundWorkspace = workspaceJpaRepository.findById(Long.parseLong(workspaceId))
                     .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
             // 유저가 워크스페이스에 속하는지 확인
-            final boolean isUserInWorkspace = userWorkspaceRepository.existsByUserIdAndWorkspaceId(foundUser.getId(), foundWorkspace.getId());
+            final boolean isUserInWorkspace = userWorkspaceJpaRepository.existsByUserIdAndWorkspaceId(foundUser.getId(), foundWorkspace.getId());
 
             // 속하지 않는 경우 예외 발생
             if(!isUserInWorkspace) throw new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND);

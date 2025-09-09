@@ -40,7 +40,7 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
             Long userId = SecurityUtil.getCurrentUserId();
 
             // 해당 유저가 존재하는지 확인하고, 존재하면 해당 user 객체 반환
-            return userPort.findUserById(userId)
+            return userPort.findById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
         }
     }

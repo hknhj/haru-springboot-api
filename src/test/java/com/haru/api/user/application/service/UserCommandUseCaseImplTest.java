@@ -49,9 +49,9 @@ class UserCommandUseCaseImplTest {
                 .marketingAgreed(true)
                 .build();
 
-        given(userPort.existsUserByEmail(request.getEmail())).willReturn(false);
+        given(userPort.existsByEmail(request.getEmail())).willReturn(false);
         given(passwordEncoder.encode(request.getPassword())).willReturn("encodedPassword");
-        given(userPort.saveUser(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(userPort.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
         User createdUser = userCommandUseCase.createUser(request);
@@ -60,7 +60,7 @@ class UserCommandUseCaseImplTest {
         assertThat(createdUser.getEmail()).isEqualTo(request.getEmail());
         assertThat(createdUser.getPassword()).isEqualTo("encodedPassword");
 
-        verify(userPort).saveUser(any(User.class));
+        verify(userPort).save(any(User.class));
     }
 
     @Test
@@ -75,7 +75,7 @@ class UserCommandUseCaseImplTest {
                 .marketingAgreed(true)
                 .build();
 
-        given(userPort.existsUserByEmail(request.getEmail())).willReturn(true);
+        given(userPort.existsByEmail(request.getEmail())).willReturn(true);
 
         // when & then
         assertThatThrownBy(() -> userCommandUseCase.createUser(request))
@@ -95,7 +95,7 @@ class UserCommandUseCaseImplTest {
                 .emailStatus(EmailStatus.AVAILABLE)
                 .build();
 
-        given(userPort.existsUserByEmail(request.getEmail())).willReturn(false);
+        given(userPort.existsByEmail(request.getEmail())).willReturn(false);
 
         // when
         UserResponseDTO.CheckEmailDuplicationResponse actualResponse = userCommandUseCase.checkEmailDuplication(request);
@@ -103,7 +103,7 @@ class UserCommandUseCaseImplTest {
         // then
         assertThat(actualResponse.getEmailStatus()).isEqualTo(expectedResponse.getEmailStatus());
 
-        verify(userPort, times(1)).existsUserByEmail(request.getEmail());
+        verify(userPort, times(1)).existsByEmail(request.getEmail());
     }
 
     @Test
@@ -118,7 +118,7 @@ class UserCommandUseCaseImplTest {
                 .emailStatus(EmailStatus.UNAVAILABLE)
                 .build();
 
-        given(userPort.existsUserByEmail(request.getEmail())).willReturn(true);
+        given(userPort.existsByEmail(request.getEmail())).willReturn(true);
 
         // when
         UserResponseDTO.CheckEmailDuplicationResponse actualResponse = userCommandUseCase.checkEmailDuplication(request);
@@ -126,7 +126,7 @@ class UserCommandUseCaseImplTest {
         // then
         assertThat(actualResponse.getEmailStatus()).isEqualTo(expectedResponse.getEmailStatus());
 
-        verify(userPort, times(1)).existsUserByEmail(request.getEmail());
+        verify(userPort, times(1)).existsByEmail(request.getEmail());
     }
 
     @Test
@@ -202,7 +202,7 @@ class UserCommandUseCaseImplTest {
 
         given(passwordEncoder.matches(modifiedPassword, originalPassword)).willReturn(false);
         given(passwordEncoder.encode(request.getPassword())).willReturn(encodedPassword);
-        given(userPort.saveUser(user)).willReturn(user);
+        given(userPort.save(user)).willReturn(user);
 
         // when
         UserResponseDTO.User response = userCommandUseCase.updateUserInfo(user, request);
@@ -215,7 +215,7 @@ class UserCommandUseCaseImplTest {
         verify(user, times(1)).updatePassword(encodedPassword);
 
         verify(passwordEncoder, times(1)).encode(modifiedPassword);
-        verify(userPort, times(1)).saveUser(user);
+        verify(userPort, times(1)).save(user);
     }
 
     @Test

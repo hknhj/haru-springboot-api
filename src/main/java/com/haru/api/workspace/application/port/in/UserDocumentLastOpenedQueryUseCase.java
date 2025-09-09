@@ -1,7 +1,7 @@
 package com.haru.api.workspace.application.port.in;
 
-import com.haru.api.workspace.domain.Documentable;
-import com.haru.api.workspace.domain.UserDocumentId;
+import com.haru.api.global.common.Documentable;
+import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.User;
 import com.haru.api.global.common.entity.TitleHolder;
 
@@ -19,5 +19,4 @@ public interface UserDocumentLastOpenedQueryUseCase {
 
     void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder);
 
-    void updateRecordsThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable);
 }

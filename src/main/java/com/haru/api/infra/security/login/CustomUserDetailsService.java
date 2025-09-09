@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements CustomDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email, String password) throws UsernameNotFoundException {
-        User user = userPort.findUserByEmail(email)
+        User user = userPort.findByEmail(email)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_USERNAME_NOT_FOUND));
 
         org.springframework.security.core.userdetails.User securityUser = new org.springframework.security.core.userdetails.User(

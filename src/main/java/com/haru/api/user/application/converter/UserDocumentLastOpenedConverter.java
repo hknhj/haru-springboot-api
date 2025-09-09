@@ -1,8 +1,8 @@
-package com.haru.api.workspace.application.converter;
+package com.haru.api.user.application.converter;
 
-import com.haru.api.workspace.domain.Documentable;
-import com.haru.api.workspace.domain.UserDocumentId;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
+import com.haru.api.global.common.Documentable;
+import com.haru.api.user.domain.UserDocumentId;
+import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
 
 public class UserDocumentLastOpenedConverter {

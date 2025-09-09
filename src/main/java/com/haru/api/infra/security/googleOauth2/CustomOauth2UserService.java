@@ -23,7 +23,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         String email = (String) oAuth2User.getAttributes().get("email");
         String name = (String) oAuth2User.getAttributes().get("name");
         String profileImage = (String) oAuth2User.getAttributes().get("picture");
-        User foundUser = userPort.findUserByProviderId(providerId).orElse(null);
+        User foundUser = userPort.findByProviderId(providerId).orElse(null);
         if (foundUser == null) {
             User newUser = User.builder()
                     .name(name)
@@ -32,7 +32,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
                     .profileImage(profileImage)
                     .providerId(providerId)
                     .build();
-            return new CustomOauth2UserDetails(userPort.saveUser(newUser), oAuth2User.getAttributes(), true);
+            return new CustomOauth2UserDetails(userPort.save(newUser), oAuth2User.getAttributes(), true);
         } else{
             return new CustomOauth2UserDetails(foundUser, oAuth2User.getAttributes(), false);
         }

@@ -14,9 +14,9 @@ import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -42,7 +42,7 @@ import static com.haru.api.moodTracker.domain.enums.QuestionType.*;
 public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase {
 
     private final MoodTrackerRepository moodTrackerRepository;
-    private final UserWorkspaceRepository userWorkspaceRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
 
     private final SurveyQuestionRepository surveyQuestionRepository;
     private final MultipleChoiceRepository multipleChoiceRepository;
@@ -61,7 +61,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
     private final HashIdUtil hashIdUtil;
 
     private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
-    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
 
     /**
      * 분위기 트래커 생성
@@ -74,7 +74,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             MoodTrackerRequestDTO.CreateRequest request
     ) {
 
-        Workspace foundWorkspace = workspaceRepository.findById(workspace.getId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         // 분위기 트래커 생성 및 저장
@@ -100,7 +100,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
@@ -117,7 +117,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             MoodTracker moodTracker,
             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
@@ -152,7 +152,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         // redis queue에서 비워줘서 중복 처리 제외
         redisReportConsumer.removeFromQueue(moodTracker.getId());
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
@@ -288,7 +288,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
     ) {
 
         // 권한 확인
-        UserWorkspace userWorkspace = userWorkspaceRepository.findByWorkspaceIdAndUserId(
+        UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
                 moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 

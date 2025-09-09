@@ -1,7 +1,7 @@
 package com.haru.api.global.interceptor;
 
 import com.haru.api.user.application.port.out.UserPort;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
@@ -106,7 +106,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
             };
 
             // 유저 조회
-            User foundUser = userPort.findUserById(userId)
+            User foundUser = userPort.findById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // request에 attribute 저장

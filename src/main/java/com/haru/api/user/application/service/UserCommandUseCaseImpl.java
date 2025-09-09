@@ -49,7 +49,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
             user.updatePassword(passwordEncoder.encode(request.getPassword()));
         }
 
-        return UserConverter.toUserDTO(userPort.saveUser(user));
+        return UserConverter.toUserDTO(userPort.save(user));
     }
 
     @Override
@@ -65,7 +65,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     @Override
     public UserResponseDTO.CheckEmailDuplicationResponse checkEmailDuplication(UserRequestDTO.CheckEmailDuplicationRequest request) {
 
-        boolean isDuplicate = userPort.existsUserByEmail(request.getEmail());
+        boolean isDuplicate = userPort.existsByEmail(request.getEmail());
 
         if (!isDuplicate) { // 해당 이메일을 사용하고 있는 유저가 존재하지 않을 경우
             return UserResponseDTO.CheckEmailDuplicationResponse.builder()
@@ -87,7 +87,7 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
     public User createUser(UserRequestDTO.SignUpRequest request) {
 
         // 이메일 중복 확인
-        if (userPort.existsUserByEmail(request.getEmail())) {
+        if (userPort.existsByEmail(request.getEmail())) {
             throw new MemberHandler(ErrorStatus.MEMBER_ALREADY_EXISTS);
         }
 
@@ -95,6 +95,6 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
         User user = UserConverter.toUsers(request, password);
 
-        return userPort.saveUser(user);
+        return userPort.save(user);
     }
 }

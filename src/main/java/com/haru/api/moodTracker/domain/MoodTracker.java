@@ -1,7 +1,7 @@
 package com.haru.api.moodTracker.domain;
 
-import com.haru.api.workspace.domain.Documentable;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.global.common.Documentable;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.moodTracker.domain.enums.MoodTrackerVisibility;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;

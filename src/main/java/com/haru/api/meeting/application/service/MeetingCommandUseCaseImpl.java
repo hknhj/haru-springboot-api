@@ -1,8 +1,8 @@
 package com.haru.api.meeting.application.service;
 
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.UserDocumentLastOpenedRepository;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
@@ -14,9 +14,9 @@ import com.haru.api.meeting.infrastructure.KeywordRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.UserWorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.WorkspaceRepository;
+import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -45,7 +45,7 @@ import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.haru.api.workspace.domain.enums.DocumentType.AI_MEETING_MANAGER;
+import static com.haru.api.user.domain.enums.DocumentType.AI_MEETING_MANAGER;
 
 @Slf4j
 @Service
@@ -53,13 +53,13 @@ import static com.haru.api.workspace.domain.enums.DocumentType.AI_MEETING_MANAGE
 @Transactional(readOnly = true)
 public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
-    private final UserWorkspaceRepository userWorkspaceRepository;
-    private final WorkspaceRepository workspaceRepository;
+    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
+    private final WorkspaceJpaRepository workspaceJpaRepository;
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
     private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
-    private final UserDocumentLastOpenedRepository userDocumentLastOpenedRepository;
+    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
     private final MarkdownFileUploader markdownFileUploader;
@@ -75,10 +75,10 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
             MeetingRequestDTO.createMeetingRequest request)
     {
 
-        Workspace foundWorkspace = workspaceRepository.findById(request.getWorkspaceId())
+        Workspace foundWorkspace = workspaceJpaRepository.findById(request.getWorkspaceId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
-        if (!userWorkspaceRepository.existsByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId()))
+        if (!userWorkspaceJpaRepository.existsByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId()))
             throw new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND);
 
 
@@ -125,7 +125,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
         // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
         userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
@@ -158,7 +158,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         Meeting foundMeeting = meetingRepository.findById(meeting.getId())
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
@@ -184,7 +184,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         Meeting foundMeeting = meetingRepository.findById(meeting.getId())
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
@@ -201,7 +201,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
             String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
             log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
             // Meeting AI 회의록 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
+            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
             foundLastOpenedList.forEach(userDocumentLastOpened -> {
                 userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
             });
@@ -283,7 +283,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
 
-                    List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedRepository.findByDocumentIdAndDocumentType(currentMeeting.getId(), AI_MEETING_MANAGER);
+                    List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(currentMeeting.getId(), AI_MEETING_MANAGER);
                     foundLastOpenedList.forEach(userDocumentLastOpened -> {
                         userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
                     });

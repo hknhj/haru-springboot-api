@@ -14,7 +14,7 @@ public interface WorkspaceCommandUseCase {
 
     WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token);
 
-    WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token, User user);
+    void acceptInvite(String token, User user);
 
     void sendInviteEmail(User user, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request);
 }
