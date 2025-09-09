@@ -1,6 +1,8 @@
-package com.haru.api.global.common;
+package com.haru.api.shared_kernel.domain;
 
 import com.haru.api.user.domain.enums.DocumentType;
+
+import java.time.LocalDateTime;
 
 public interface Documentable {
     Long getId();
@@ -8,4 +10,5 @@ public interface Documentable {
     Long getWorkspaceId();
     DocumentType getDocumentType();
     String getThumbnailKeyName();
+    LocalDateTime getCreatedAt();
 }

@@ -3,7 +3,7 @@ package com.haru.api.meeting.application.service;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
@@ -58,7 +58,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
     private final MeetingRepository meetingRepository;
     private final KeywordRepository keywordRepository;
     private final ChatGPTClient chatGPTClient;
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
     private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
@@ -126,7 +126,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
+        userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }

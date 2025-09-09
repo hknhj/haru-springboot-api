@@ -1,8 +1,8 @@
 package com.haru.api.global.aspect;
 
-import com.haru.api.global.common.Documentable;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UpdateDocumentTitleAspect {
 
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
 
     @AfterReturning("@annotation(com.haru.api.global.annotation.UpdateDocumentTitle)")
     public void afterTitleUpdate(JoinPoint joinPoint) {
@@ -36,7 +36,7 @@ public class UpdateDocumentTitleAspect {
 
         // document, titleHolder가 정상적으로 조회되면 last opened 테이블에서 해당 문서의 제목 수정
         if (document != null && documentModifier != null) {
-            userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(document, documentModifier);
+            userDocumentLastOpenedCommandUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(document, documentModifier);
         }
     }
 }

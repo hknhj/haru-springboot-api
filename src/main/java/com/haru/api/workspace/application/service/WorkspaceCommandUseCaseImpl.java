@@ -1,17 +1,15 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.application.converter.UserDocumentLastOpenedConverter;
 import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
-import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.port.out.WorkspaceInvitationPort;
 import com.haru.api.workspace.application.port.out.WorkspacePort;
-import com.haru.api.global.common.Documentable;
+import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentLastOpened;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
-import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.domain.UserWorkspace;
@@ -42,18 +40,14 @@ import java.util.UUID;
 public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
 
     private final UserQueryUseCase userQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
+    private final DocumentQueryUseCase documentQueryUseCase;
 
     private final WorkspacePort workspacePort;
     private final UserWorkspacePort userWorkspacePort;
     private final WorkspaceInvitationPort workspaceInvitationPort;
-    private final UserDocumentLastOpenedPort userDocumentLastOpenedPort;
-
-    private final MeetingRepository meetingRepository;
-    private final SnsEventRepository snsEventRepository;
-    private final MoodTrackerRepository moodTrackerRepository;
 
     private final AmazonS3Manager amazonS3Manager;
-
     private final EmailSender emailSender;
 
     @Value("${invite-url}")
@@ -117,7 +111,6 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         return WorkspaceConverter.toWorkspaceDTO(workspace, amazonS3Manager.generatePresignedUrl(workspace.getKeyName()));
     }
 
-    // 초대 메일 클릭 시 호출되는 메서드
     @Override
     @Transactional
     public WorkspaceResponseDTO.InvitationAcceptResult acceptInvite(String token) {
@@ -125,8 +118,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationPort.findByToken(token)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
-        Workspace foundWorkspace = workspacePort.findById(foundWorkspaceInvitation.getWorkspace().getId())
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+        Workspace foundWorkspace = foundWorkspaceInvitation.getWorkspace();
 
         // 이미 수락된 초대장이면 예외 발생
         if(foundWorkspaceInvitation.isAccepted())
@@ -141,6 +133,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         if(isAlreadyRegistered) {
             // 초대장을 수락했다고 db에 저장
             foundWorkspaceInvitation.setAccepted();
+            workspaceInvitationPort.save(foundWorkspaceInvitation);
         } else {
             // 가입되지 않은 사용자면 not success
             return WorkspaceConverter.toInvitationAcceptResult(false, false, foundWorkspace);
@@ -151,15 +144,13 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
         return WorkspaceConverter.toInvitationAcceptResult(true, true, foundWorkspace);
     }
 
-    // 회원가입 시 초대 토큰이 있는 경우 호출
     @Transactional
     @Override
     public void acceptInvite(String token, User signedUser) {
         WorkspaceInvitation foundWorkspaceInvitation = workspaceInvitationPort.findByToken(token)
                 .orElseThrow(() -> new WorkspaceInvitationHandler(ErrorStatus.INVITATION_NOT_FOUND));
 
-        Workspace foundWorkspace = workspacePort.findById(foundWorkspaceInvitation.getWorkspace().getId())
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
+        Workspace foundWorkspace = foundWorkspaceInvitation.getWorkspace();
 
         if(foundWorkspaceInvitation.isAccepted())
             throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
@@ -173,17 +164,15 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
     @Transactional
     @Override
     public void sendInviteEmail(User user, WorkspaceRequestDTO.WorkspaceInviteEmailRequest request) {
-        Long workspaceId = request.getWorkspaceId();
-        List<String> emails = request.getEmails();
 
-        Workspace foundWorkspace = workspacePort.findById(workspaceId)
+        Workspace foundWorkspace = workspacePort.findById(request.getWorkspaceId())
                 .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
 
         userWorkspacePort.findByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 이메일마다 invitation 생성하여 저장, 초대 수락 토큰 생성, 초대 이메일 발송
-        for(String email: emails) {
+        for(String email: request.getEmails()) {
             String token = UUID.randomUUID().toString();
 
             WorkspaceInvitation workspaceInvitation = WorkspaceInvitation.builder()
@@ -213,28 +202,14 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
                 .auth(Auth.MEMBER)
                 .build());
 
-        // 문서 목록을 UserDocumentLastOpened에 추가
-        List<UserDocumentLastOpened> userDocumentLastOpenedList = addDocumentsToUserLastOpened(workspace, user);
-        if (!userDocumentLastOpenedList.isEmpty()) {
-            userDocumentLastOpenedPort.saveAll(userDocumentLastOpenedList);
-        }
-    }
-
-    private List<UserDocumentLastOpened> addDocumentsToUserLastOpened(Workspace workspace, User user) {
-
-        List<Documentable> documentList = new ArrayList<>();
-
-        documentList.addAll(meetingRepository.findAllByWorkspaceId(workspace.getId()));
-        documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspace.getId()));
-        documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspace.getId()));
+        // 워크스페이스에 속한 문서를 유저의 UserDocumentLastOpened에 추가
+        List<Documentable> documentList = documentQueryUseCase.getDocumentsByWorkspaceId(workspace.getId());
 
         List<UserDocumentLastOpened> userDocumentLastOpenedList = new ArrayList<>();
         for(Documentable documentable : documentList)
             userDocumentLastOpenedList.add(UserDocumentLastOpenedConverter.toUserDocumentLastOpened(documentable, user));
 
-        userDocumentLastOpenedPort.saveAll(userDocumentLastOpenedList);
-
-        return userDocumentLastOpenedList;
+        userDocumentLastOpenedCommandUseCase.saveAll(userDocumentLastOpenedList);
     }
 
     private String generateInvitationEmailContentHtml(String invitedEmail, String inviterName, String workspaceName, String invitationLink) {

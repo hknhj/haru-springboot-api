@@ -4,7 +4,7 @@ import com.haru.api.moodTracker.application.port.in.MoodTrackerQueryUseCase;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.moodTracker.infrastructure.SurveyQuestionRepository;
 import com.haru.api.user.domain.UserDocumentId;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
 import com.haru.api.moodTracker.domain.MoodTracker;
@@ -40,7 +40,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
 
     private final SurveyQuestionRepository surveyQuestionRepository;
 
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
 
     @Override
     public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
@@ -99,7 +99,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
 
         UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
 
-        userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
+        userDocumentLastOpenedCommandUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
@@ -138,7 +138,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
 
         UserDocumentId userDocumentId = new UserDocumentId(user.getId(), moodTracker.getId(), moodTracker.getDocumentType());
 
-        userDocumentLastOpenedQueryUseCase.updateLastOpened(userDocumentId, workspaceId, title);
+        userDocumentLastOpenedCommandUseCase.updateLastOpened(userDocumentId, workspaceId, title);
 
         // 권한 확인
         UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
