@@ -4,6 +4,7 @@ import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
+import com.haru.api.infra.mail.EmailSender;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
@@ -24,11 +25,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -57,6 +61,10 @@ class WorkspaceCommandUseCaseImplTest {
     private UserQueryUseCase userQueryUseCase;
     @Mock
     private DocumentQueryUseCase documentQueryUseCase;
+    @Mock
+    private EmailSender emailSender;
+
+    private final String inviteBaseUrl = "https://my-app.com/invite";
 
     @Test
     @DisplayName("워크스페이스 생성 성공 - 이미지 포함")
@@ -361,4 +369,83 @@ class WorkspaceCommandUseCaseImplTest {
         // 저장된 UserWorkspace 객체의 user가 파라미터로 받은 newUser와 일치하는지 검증
         assertThat(userWorkspaceCaptor.getValue().getUser()).isEqualTo(newUser);
     }
+
+    @Test
+    @DisplayName("초대 이메일 발송 실패 - 워크스페이스 없음")
+    void sendInviteEmail_fail_when_workspace_not_found() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        WorkspaceRequestDTO.WorkspaceInviteEmailRequest request = new WorkspaceRequestDTO.WorkspaceInviteEmailRequest(999L, List.of("test@test.com"));
+
+        given(workspacePort.findById(999L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.sendInviteEmail(user, request))
+                .isInstanceOf(WorkspaceHandler.class)
+                .hasMessageContaining("워크스페이스가 없습니다.");
+    }
+
+    @Test
+    @DisplayName("초대 이메일 발송 실패 - 사용자가 멤버가 아님")
+    void sendInviteEmail_fail_when_user_not_member() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        WorkspaceRequestDTO.WorkspaceInviteEmailRequest request = new WorkspaceRequestDTO.WorkspaceInviteEmailRequest(10L, List.of("test@test.com"));
+
+        given(workspacePort.findById(10L)).willReturn(Optional.of(workspace));
+        given(userWorkspacePort.findByUserIdAndWorkspaceId(1L, 10L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.sendInviteEmail(user, request))
+                .isInstanceOf(UserWorkspaceHandler.class)
+                .hasMessageContaining("해당 유저가 해당 워크스페이스에 속해있지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("초대 이메일 발송 성공")
+    void sendInviteEmail_success() {
+
+        // given
+        User invitingUser = User.builder().id(1L).name("초대자").build();
+        Workspace workspace = Workspace.builder().id(10L).title("테스트 워크스페이스").build();
+        List<String> emailsToInvite = List.of("invitee1@test.com", "invitee2@test.com");
+        WorkspaceRequestDTO.WorkspaceInviteEmailRequest request = new WorkspaceRequestDTO.WorkspaceInviteEmailRequest(10L, emailsToInvite);
+
+        UUID fakeUuid = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        String fakeToken = fakeUuid.toString();
+
+        given(workspacePort.findById(10L)).willReturn(Optional.of(workspace));
+        given(userWorkspacePort.findByUserIdAndWorkspaceId(1L, 10L)).willReturn(Optional.of(mock(UserWorkspace.class)));
+
+        // 정적 메서드 Mocking
+        try (MockedStatic<UUID> mockedUuid = mockStatic(UUID.class)) {
+            mockedUuid.when(UUID::randomUUID).thenReturn(fakeUuid);
+
+            // when
+            workspaceCommandUseCase.sendInviteEmail(invitingUser, request);
+
+            // then
+            // 초대장 저장 로직 검증
+            ArgumentCaptor<WorkspaceInvitation> invitationCaptor = ArgumentCaptor.forClass(WorkspaceInvitation.class);
+            verify(workspaceInvitationPort, times(2)).save(invitationCaptor.capture());
+
+            List<WorkspaceInvitation> savedInvitations = invitationCaptor.getAllValues();
+            assertThat(savedInvitations.get(0).getEmail()).isEqualTo("invitee1@test.com");
+            assertThat(savedInvitations.get(1).getEmail()).isEqualTo("invitee2@test.com");
+            assertThat(savedInvitations.get(0).getToken()).isEqualTo(fakeToken);
+
+            // 이메일 발송 로직 검증
+            ArgumentCaptor<String> emailCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
+            verify(emailSender, times(2)).send(emailCaptor.capture(), subjectCaptor.capture(), contentCaptor.capture());
+
+            assertThat(emailCaptor.getAllValues()).containsExactly("invitee1@test.com", "invitee2@test.com");
+            assertThat(subjectCaptor.getValue()).contains(workspace.getTitle(), invitingUser.getName());
+        }
+    }
+
 }
