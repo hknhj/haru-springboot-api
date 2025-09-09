@@ -2,7 +2,7 @@ package com.haru.api.global.aspect;
 
 import com.haru.api.global.common.Documentable;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
-import com.haru.api.global.common.entity.TitleHolder;
+import com.haru.api.global.common.entity.DocumentModifier;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -20,7 +20,7 @@ public class UpdateDocumentTitleAspect {
     public void afterTitleUpdate(JoinPoint joinPoint) {
 
         Documentable document = null;
-        TitleHolder titleHolder = null;
+        DocumentModifier documentModifier = null;
 
         // 실행된 메서드의 인자 추출
         Object[] args = joinPoint.getArgs();
@@ -29,14 +29,14 @@ public class UpdateDocumentTitleAspect {
         for (Object arg : args) {
             if (arg instanceof Documentable) {
                 document = (Documentable) arg;
-            } else if (arg instanceof TitleHolder) {
-                titleHolder = (TitleHolder) arg;
+            } else if (arg instanceof DocumentModifier) {
+                documentModifier = (DocumentModifier) arg;
             }
         }
 
         // document, titleHolder가 정상적으로 조회되면 last opened 테이블에서 해당 문서의 제목 수정
-        if (document != null && titleHolder != null) {
-            userDocumentLastOpenedQueryUseCase.updateRecordsForWorkspaceUsers(document, titleHolder);
+        if (document != null && documentModifier != null) {
+            userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(document, documentModifier);
         }
     }
 }

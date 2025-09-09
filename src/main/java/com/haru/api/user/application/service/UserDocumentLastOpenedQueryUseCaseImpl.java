@@ -9,7 +9,7 @@ import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
-import com.haru.api.global.common.entity.TitleHolder;
+import com.haru.api.global.common.entity.DocumentModifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,35 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
 
     private final UserDocumentLastOpenedPort userDocumentLastOpenedPort;
     private final UserPort userPort;
+
+    @Override
+    @Transactional
+    public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
+
+        List<UserDocumentLastOpened> recordsToSave = new ArrayList<>();
+
+        for (User user : usersInWorkspace) {
+            UserDocumentId documentId = new UserDocumentId(
+                    user.getId(),
+                    document.getId(),
+                    document.getDocumentType()
+            );
+
+            UserDocumentLastOpened newRecord = UserDocumentLastOpened.builder()
+                    .id(documentId)
+                    .user(user)
+                    .title(document.getTitle())
+                    .workspaceId(document.getWorkspaceId())
+                    .thumbnailKeyName(document.getThumbnailKeyName())
+                    .build();
+
+            recordsToSave.add(newRecord);
+        }
+
+        if (!recordsToSave.isEmpty()) {
+            userDocumentLastOpenedPort.saveAll(recordsToSave);
+        }
+    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -50,15 +79,18 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
 
     @Override
     @Transactional
-    public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document) {
+    public void updateRecordsTitleAndThumbnailForWorkspaceUsers(Documentable documentable, DocumentModifier documentModifier) {
 
-        // 저장할 엔티티 리스트 생성
-        List<UserDocumentLastOpened> recordsToSave = recordsToProcess(usersInWorkspace, document);
+        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
+        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedPort.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
 
-        // 전체 save
-        if (!recordsToSave.isEmpty()) {
-            userDocumentLastOpenedPort.saveAll(recordsToSave);
+        if (recordsToUpdate.isEmpty()) return;
+
+        for (UserDocumentLastOpened record : recordsToUpdate) {
+            record.updateDetails(documentModifier);
         }
+
+        userDocumentLastOpenedPort.saveAll(recordsToUpdate);
     }
 
     @Override
@@ -71,61 +103,6 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
             userDocumentLastOpenedPort.deleteAll(recordsToUpdate);
         }
 
-    }
-
-    @Override
-    @Transactional
-    public void updateRecordsForWorkspaceUsers(Documentable documentable, TitleHolder titleHolder) {
-
-        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedPort.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
-
-        if (!recordsToUpdate.isEmpty()) {
-            for (UserDocumentLastOpened record : recordsToUpdate) {
-                record.updateTitle(titleHolder.getTitle());
-            }
-        }
-
-        userDocumentLastOpenedPort.saveAll(recordsToUpdate);
-    }
-
-    @Override
-    @Transactional
-    public void updateRecordsTitleAndThumbnailForWorkspaceUsers(List<User> usersInWorkspace, Documentable documentable, TitleHolder titleHolder) {
-        // 해당 문서 id, 문서 타입에 해당하는 last opened 튜플 검색
-        List<UserDocumentLastOpened> recordsToUpdate = userDocumentLastOpenedPort.findByDocumentIdAndDocumentType(documentable.getId(), documentable.getDocumentType());
-
-        if (!recordsToUpdate.isEmpty()) {
-            for (UserDocumentLastOpened record : recordsToUpdate) {
-                record.updateTitle(titleHolder.getTitle());
-                record.updateThumbnailKeyName(documentable.getThumbnailKeyName());
-            }
-        }
-    }
-
-    private List<UserDocumentLastOpened> recordsToProcess(List<User> usersInWorkspace, Documentable document) {
-        // 처리할 엔티티들을 담을 리스트 생성
-        List<UserDocumentLastOpened> recordsToProcess = new ArrayList<>();
-
-        for (User user : usersInWorkspace) {
-            UserDocumentId documentId = new UserDocumentId(
-                    user.getId(),
-                    document.getId(),
-                    document.getDocumentType()
-            );
-
-            UserDocumentLastOpened newRecord = UserDocumentLastOpened.builder()
-                    .id(documentId)
-                    .user(user)
-                    .title(document.getTitle())
-                    .workspaceId(document.getWorkspaceId())
-                    .thumbnailKeyName(document.getThumbnailKeyName())
-                    .build();
-
-            recordsToProcess.add(newRecord);
-        }
-
-        return recordsToProcess;
     }
 
 }
