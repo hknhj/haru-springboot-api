@@ -1,5 +1,9 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.meeting.domain.Meeting;
+import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.UserDocumentId;
@@ -15,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +38,9 @@ class WorkspaceQueryUseCaseImplTest {
 
     @Mock
     private UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+
+    @Mock
+    private DocumentQueryUseCase documentQueryUseCase;
 
     @Test
     @DisplayName("문서 제목으로 검색 성공")
@@ -148,5 +157,64 @@ class WorkspaceQueryUseCaseImplTest {
         assertThat(response.getDocuments()).isEmpty();
 
         verify(userDocumentLastOpenedQueryUseCase).getRecentDocuments(eq(user.getId()), eq(workspace.getId()), any(PageRequest.class));
+    }
+
+    @Test
+    @DisplayName("캘린더 문서 목록 조회 성공")
+    void getDocumentForCalendar_success() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        LocalDate startDate = LocalDate.of(2025, 9, 1);
+        LocalDate endDate = LocalDate.of(2025, 9, 30);
+
+        Documentable doc1 = Meeting.builder()
+                .id(1L)
+                .title("미팅1")
+                .workspace(workspace)
+                .build();
+        Documentable doc2 = SnsEvent.builder()
+                .id(2L)
+                .title("이벤트1")
+                .workspace(workspace)
+                .build();
+        List<Documentable> fakeDocumentList = List.of(doc1, doc2);
+
+        given(documentQueryUseCase.getAllDocumentsForCalendars(eq(workspace.getId()), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .willReturn(fakeDocumentList);
+
+        // when
+        WorkspaceResponseDTO.DocumentCalendarList response = workspaceQueryUseCase.getDocumentForCalendar(user, workspace, startDate, endDate);
+
+        // then
+        // 행위 검증: 의존하는 UseCase가 올바른 인자들로 호출되었는지 확인
+        verify(documentQueryUseCase).getAllDocumentsForCalendars(eq(workspace.getId()), any(LocalDateTime.class), any(LocalDateTime.class));
+
+        // 상태 검증: 반환된 DTO의 크기와 내용이 올바른지 확인
+        assertThat(response.getDocumentList()).hasSize(2);
+        assertThat(response.getDocumentList().get(0).getTitle()).isEqualTo(doc1.getTitle());
+        assertThat(response.getDocumentList().get(1).getTitle()).isEqualTo(doc2.getTitle());
+    }
+
+    @Test
+    @DisplayName("캘린더 문서 목록 조회 - 결과 없음")
+    void getDocumentForCalendar_returns_empty_list_when_no_documents() {
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        LocalDate startDate = LocalDate.of(2025, 9, 1);
+        LocalDate endDate = LocalDate.of(2025, 9, 30);
+
+        given(documentQueryUseCase.getAllDocumentsForCalendars(eq(workspace.getId()), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .willReturn(Collections.emptyList());
+
+        // when
+        WorkspaceResponseDTO.DocumentCalendarList response = workspaceQueryUseCase.getDocumentForCalendar(user, workspace, startDate, endDate);
+
+        // then
+        verify(documentQueryUseCase).getAllDocumentsForCalendars(eq(workspace.getId()), any(LocalDateTime.class), any(LocalDateTime.class));
+        assertThat(response.getDocumentList()).isNotNull();
+        assertThat(response.getDocumentList()).isEmpty();
     }
 }
