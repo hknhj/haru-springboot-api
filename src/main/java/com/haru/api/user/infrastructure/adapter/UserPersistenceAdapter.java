@@ -2,6 +2,7 @@ package com.haru.api.user.infrastructure.adapter;
 
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
+import com.haru.api.user.infrastructure.jpa.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

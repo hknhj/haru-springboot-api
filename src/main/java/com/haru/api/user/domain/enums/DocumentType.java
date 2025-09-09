@@ -1,4 +1,4 @@
-package com.haru.api.workspace.domain.enums;
+package com.haru.api.user.domain.enums;
 
 public enum DocumentType {
     AI_MEETING_MANAGER,

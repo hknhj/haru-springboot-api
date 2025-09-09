@@ -1,6 +1,6 @@
 package com.haru.api.global.documentFinder;
 
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 
 public interface DocumentFinder {
     DocumentType getSupportType();

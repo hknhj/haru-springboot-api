@@ -1,7 +1,7 @@
 package com.haru.api.workspace.application.converter;
 
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.moodTracker.domain.MoodTracker;
 import com.haru.api.snsEvent.domain.SnsEvent;

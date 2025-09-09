@@ -1,6 +1,6 @@
-package com.haru.api.workspace.domain;
+package com.haru.api.user.domain;
 
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package com.haru.api.user.infrastructure.adapter;
+package com.haru.api.user.infrastructure.jpa;
 
 import com.haru.api.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;

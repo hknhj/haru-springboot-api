@@ -3,7 +3,7 @@ package com.haru.api.workspace.presentation.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import lombok.Builder;
 import lombok.Getter;

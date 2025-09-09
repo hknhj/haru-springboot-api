@@ -1,10 +1,10 @@
-package com.haru.api.workspace.infrastructure.adapter;
+package com.haru.api.user.infrastructure.adapter;
 
 import com.haru.api.workspace.application.port.out.UserDocumentLastOpenedPort;
-import com.haru.api.workspace.domain.UserDocumentId;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.domain.enums.DocumentType;
-import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
+import com.haru.api.user.domain.UserDocumentId;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
+import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;

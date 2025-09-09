@@ -1,8 +1,8 @@
 package com.haru.api.meeting.application.service;
 
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
@@ -45,7 +45,7 @@ import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.haru.api.workspace.domain.enums.DocumentType.AI_MEETING_MANAGER;
+import static com.haru.api.user.domain.enums.DocumentType.AI_MEETING_MANAGER;
 
 @Slf4j
 @Service

@@ -4,6 +4,7 @@ import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserQueryUseCase {
 
@@ -12,4 +13,6 @@ public interface UserQueryUseCase {
     List<UserResponseDTO.User> getSimilarEmailUsers(User user, String email);
 
     User findUserById(Long userId);
+
+    Optional<User> findOptionalUserByEmail(String email);
 }

@@ -1,8 +1,8 @@
 package com.haru.api.workspace.application.service;
 
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.domain.MoodTracker;

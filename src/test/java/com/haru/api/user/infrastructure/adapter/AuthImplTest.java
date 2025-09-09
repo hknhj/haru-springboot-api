@@ -5,6 +5,7 @@ import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.infra.security.jwt.JwtUtils;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.user.application.port.out.UserPort;
+import com.haru.api.user.application.service.AuthImpl;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;

@@ -1,8 +1,8 @@
 package com.haru.api.workspace.application.port.out;
 
-import com.haru.api.workspace.domain.UserDocumentId;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.UserDocumentId;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

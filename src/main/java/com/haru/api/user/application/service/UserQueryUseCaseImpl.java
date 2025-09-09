@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,5 +44,10 @@ public class UserQueryUseCaseImpl implements UserQueryUseCase {
     public User findUserById(Long userId) {
         return userPort.findById(userId)
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
+    }
+
+    @Override
+    public Optional<User> findOptionalUserByEmail(String email) {
+        return userPort.findByEmail(email);
     }
 }

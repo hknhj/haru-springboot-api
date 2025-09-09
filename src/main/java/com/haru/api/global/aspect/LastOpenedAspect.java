@@ -1,7 +1,7 @@
 package com.haru.api.global.aspect;
 
-import com.haru.api.workspace.domain.Documentable;
-import com.haru.api.workspace.domain.UserDocumentId;
+import com.haru.api.global.common.Documentable;
+import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.global.annotation.TrackLastOpened;

@@ -1,8 +1,8 @@
-package com.haru.api.workspace.infrastructure.jpa;
+package com.haru.api.user.infrastructure.jpa;
 
-import com.haru.api.workspace.domain.UserDocumentId;
-import com.haru.api.workspace.domain.UserDocumentLastOpened;
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.UserDocumentId;
+import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

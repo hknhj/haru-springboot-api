@@ -1,6 +1,6 @@
 package com.haru.api.global.documentFinder;
 
-import com.haru.api.workspace.domain.enums.DocumentType;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;

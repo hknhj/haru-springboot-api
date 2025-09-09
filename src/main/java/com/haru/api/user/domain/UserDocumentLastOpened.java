@@ -1,6 +1,5 @@
-package com.haru.api.workspace.domain;
+package com.haru.api.user.domain;
 
-import com.haru.api.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
