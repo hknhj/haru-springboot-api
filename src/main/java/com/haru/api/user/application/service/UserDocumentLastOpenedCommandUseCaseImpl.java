@@ -2,14 +2,14 @@ package com.haru.api.user.application.service;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
-import com.haru.api.global.common.Documentable;
+import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastOpenedQueryUseCase {
+public class UserDocumentLastOpenedCommandUseCaseImpl implements UserDocumentLastOpenedCommandUseCase {
 
     private final UserDocumentLastOpenedPort userDocumentLastOpenedPort;
     private final UserPort userPort;
@@ -103,6 +103,11 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
             userDocumentLastOpenedPort.deleteAll(recordsToUpdate);
         }
 
+    }
+
+    @Override
+    public void saveAll(List<UserDocumentLastOpened> userDocumentLastOpenedList) {
+        userDocumentLastOpenedPort.saveAll(userDocumentLastOpenedList);
     }
 
 }

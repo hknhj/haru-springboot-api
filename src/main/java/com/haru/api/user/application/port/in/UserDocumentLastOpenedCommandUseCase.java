@@ -1,13 +1,14 @@
 package com.haru.api.user.application.port.in;
 
-import com.haru.api.global.common.Documentable;
+import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.User;
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.user.domain.UserDocumentLastOpened;
 
 import java.util.List;
 
-public interface UserDocumentLastOpenedQueryUseCase {
+public interface UserDocumentLastOpenedCommandUseCase {
 
     /**
      * 문서 생성 시, 워크스페이스에 속해있는 유저의 해당 문서에 대한 UserDocumentLastOpened를 생성하는 메서드
@@ -41,5 +42,12 @@ public interface UserDocumentLastOpenedQueryUseCase {
      * @param document
      */
     void deleteRecordsForWorkspaceUsers(Documentable document);
+
+    /**
+     * UserDocumentLastOpened를 한 번에 저장하는 메서드
+     *
+     * @param userDocumentLastOpenedList
+     */
+    void saveAll(List<UserDocumentLastOpened> userDocumentLastOpenedList);
 
 }

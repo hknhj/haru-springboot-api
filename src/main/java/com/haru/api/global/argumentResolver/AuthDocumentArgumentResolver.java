@@ -1,6 +1,6 @@
 package com.haru.api.global.argumentResolver;
 
-import com.haru.api.global.common.Documentable;
+import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.global.annotation.AuthDocument;
 import com.haru.api.global.documentFinder.DocumentFinder;

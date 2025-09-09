@@ -1,6 +1,6 @@
 package com.haru.api.user.domain;
 
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;

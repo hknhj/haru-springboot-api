@@ -1,6 +1,6 @@
 package com.haru.api.snsEvent.presentation.dto;
 
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
 import lombok.*;
 
 import java.time.LocalDateTime;

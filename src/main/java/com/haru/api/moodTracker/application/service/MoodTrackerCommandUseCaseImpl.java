@@ -5,7 +5,7 @@ import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
@@ -60,7 +60,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
 
     private final HashIdUtil hashIdUtil;
 
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
     private final WorkspaceJpaRepository workspaceJpaRepository;
 
     /**
@@ -101,7 +101,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
+        userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
 
         return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
     }

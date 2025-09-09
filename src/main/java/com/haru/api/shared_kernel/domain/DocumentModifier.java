@@ -1,4 +1,4 @@
-package com.haru.api.global.common.entity;
+package com.haru.api.shared_kernel.domain;
 
 public interface DocumentModifier {
     String getTitle();

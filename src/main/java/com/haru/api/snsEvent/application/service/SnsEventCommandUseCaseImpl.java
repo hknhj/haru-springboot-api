@@ -1,7 +1,7 @@
 package com.haru.api.snsEvent.application.service;
 
 import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
@@ -63,7 +63,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     private final ParticipantRepository participantRepository;
     private final WinnerRepository winnerRepository;
     private final RestTemplate restTemplate;
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
     private final int WORD_TABLE_SIZE = 40; // 페이지당 총 아이디 수
     private final int PER_COL = WORD_TABLE_SIZE/ 2; // 한쪽 컬럼에 들어갈 개수
@@ -177,7 +177,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         // sns event 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedQueryUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
+        userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(createdSnsEvent.getId())
@@ -251,7 +251,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
         // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
-        userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(savedSnsEvent, request);
+        userDocumentLastOpenedCommandUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(savedSnsEvent, request);
     }
 
     @Override

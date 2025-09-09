@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.presentation.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.haru.api.moodTracker.domain.enums.MoodTrackerVisibility;
 import com.haru.api.moodTracker.domain.enums.QuestionType;
-import com.haru.api.global.common.entity.DocumentModifier;
+import com.haru.api.shared_kernel.domain.DocumentModifier;
 import com.haru.api.global.util.json.ToLongDeserializer;
 import com.haru.api.global.util.json.ToLongListDeserializer;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

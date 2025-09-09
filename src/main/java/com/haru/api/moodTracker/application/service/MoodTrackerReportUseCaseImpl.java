@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.application.service;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
@@ -48,7 +48,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
     private final MultipleChoiceAnswerRepository multipleChoiceAnswerRepository;
     private final CheckboxChoiceAnswerRepository checkboxChoiceAnswerRepository;
     private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
 
     private final AmazonS3Manager amazonS3Manager;
     private final MarkdownFileUploader markdownFileUploader;
@@ -265,7 +265,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
 
         // Mood Tracker 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundMoodTracker.getWorkspace().getId());
-        userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(
+        userDocumentLastOpenedCommandUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(
                 foundMoodTracker,
                 MoodTrackerRequestDTO.UpdateTitleRequest.builder().title(foundMoodTracker.getTitle()).build()
         );
