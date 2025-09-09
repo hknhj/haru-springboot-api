@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.application.service;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
@@ -266,7 +266,6 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
         // Mood Tracker 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundMoodTracker.getWorkspace().getId());
         userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(
-                usersInWorkspace,
                 foundMoodTracker,
                 MoodTrackerRequestDTO.UpdateTitleRequest.builder().title(foundMoodTracker.getTitle()).build()
         );
@@ -294,7 +293,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
 
         amazonS3Manager.deleteFile(foundMoodTracker.getPdfReportKey());
         amazonS3Manager.deleteFile(foundMoodTracker.getWordReportKey());
-        amazonS3Manager.deleteFile(foundMoodTracker.getThumbnailKey());
+        amazonS3Manager.deleteFile(foundMoodTracker.getThumbnailKeyName());
     }
 
     /* ========================= 헬퍼들 ========================= */

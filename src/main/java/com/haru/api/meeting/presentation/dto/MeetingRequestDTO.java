@@ -1,7 +1,7 @@
 package com.haru.api.meeting.presentation.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.haru.api.global.common.entity.TitleHolder;
+import com.haru.api.global.common.entity.DocumentModifier;
 import com.haru.api.global.util.json.ToLongDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -22,8 +22,9 @@ public class MeetingRequestDTO {
         private String title;
     }
     @Getter
-    public static class updateTitle implements TitleHolder {
+    public static class updateTitle implements DocumentModifier {
         private String title;
+        private String thumbnailKeyName;
     }
 
     @Getter

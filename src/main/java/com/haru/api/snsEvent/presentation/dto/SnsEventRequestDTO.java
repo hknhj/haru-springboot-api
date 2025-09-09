@@ -1,6 +1,6 @@
 package com.haru.api.snsEvent.presentation.dto;
 
-import com.haru.api.global.common.entity.TitleHolder;
+import com.haru.api.global.common.entity.DocumentModifier;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -34,7 +34,8 @@ public class SnsEventRequestDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UpdateSnsEventRequest implements TitleHolder {
+    public static class UpdateSnsEventRequest implements DocumentModifier {
         private String title;
+        private String thumbnailKeyName;
     }
 }

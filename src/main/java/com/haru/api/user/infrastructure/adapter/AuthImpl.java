@@ -1,4 +1,4 @@
-package com.haru.api.user.application.service;
+package com.haru.api.user.infrastructure.adapter;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;

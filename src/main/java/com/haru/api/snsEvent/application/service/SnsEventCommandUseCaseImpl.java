@@ -1,7 +1,7 @@
 package com.haru.api.snsEvent.application.service;
 
 import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
@@ -251,7 +251,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
         // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
         List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
-        userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(usersInWorkspace, savedSnsEvent, request);
+        userDocumentLastOpenedQueryUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(savedSnsEvent, request);
     }
 
     @Override

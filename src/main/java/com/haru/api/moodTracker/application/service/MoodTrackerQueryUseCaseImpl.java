@@ -4,7 +4,7 @@ import com.haru.api.moodTracker.application.port.in.MoodTrackerQueryUseCase;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.moodTracker.infrastructure.SurveyQuestionRepository;
 import com.haru.api.user.domain.UserDocumentId;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
 import com.haru.api.moodTracker.domain.MoodTracker;

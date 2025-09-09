@@ -1,5 +1,6 @@
 package com.haru.api.user.domain;
 
+import com.haru.api.global.common.entity.DocumentModifier;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -48,6 +49,16 @@ public class UserDocumentLastOpened {
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateDetails(DocumentModifier modifier) {
+        if (modifier.getTitle() != null && !modifier.getTitle().trim().isEmpty()) {
+            this.title = modifier.getTitle();
+        }
+
+        if (modifier.getThumbnailKeyName() != null) {
+            this.thumbnailKeyName = modifier.getThumbnailKeyName();
+        }
     }
 
     public void updateThumbnailKeyName(String thumbnailKeyName) {

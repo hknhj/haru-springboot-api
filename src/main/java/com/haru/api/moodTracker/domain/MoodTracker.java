@@ -65,7 +65,7 @@ public class MoodTracker extends BaseEntity implements Documentable {
     private String wordReportKey;
 
     @Column(columnDefinition = "TEXT")
-    private String thumbnailKey;
+    private String thumbnailKeyName;
 
     @OneToMany(mappedBy = "moodTracker", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SurveyQuestion> surveyQuestionList = new ArrayList<>();
@@ -88,7 +88,7 @@ public class MoodTracker extends BaseEntity implements Documentable {
 
     @Override
     public String getThumbnailKeyName() {
-        return this.thumbnailKey;
+        return this.thumbnailKeyName;
     }
 
     public void updateReportKeyName(
@@ -100,6 +100,6 @@ public class MoodTracker extends BaseEntity implements Documentable {
     }
 
     public void updateThumbnailKey(String thumbnailKey) {
-        this.thumbnailKey = thumbnailKey;
+        this.thumbnailKeyName = thumbnailKey;
     }
 }

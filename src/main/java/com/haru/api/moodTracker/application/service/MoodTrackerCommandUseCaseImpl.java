@@ -5,7 +5,7 @@ import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
@@ -130,7 +130,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         moodTrackerRepository.save(moodTracker);
 
         // 마감일 이후 && 썸네일이 생성된 시점이라면,
-        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKeyName()!=null) {
             // 기존 썸네일 및 다운로드 파일 삭제
             moodTrackerReportUseCase.deleteReportFileAndThumbnail(moodTracker.getId());
             // S3에서 썸네일 및 다운로드 파일 업데이트
@@ -161,7 +161,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_MODIFY_NOT_ALLOWED);
 
         // 마감일 이후 && 썸네일이 생성된 시점이라면,
-        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKey()!=null) {
+        if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKeyName()!=null) {
             // S3에서 썸네일 및 다운로드 파일 삭제
             moodTrackerReportUseCase.deleteReportFileAndThumbnail(moodTracker.getId());
         }
