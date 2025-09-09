@@ -3,12 +3,18 @@ package com.haru.api.workspace.application.service;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
 import com.haru.api.infra.s3.AmazonS3Manager;
+import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
+import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
+import com.haru.api.workspace.application.port.out.WorkspaceInvitationPort;
 import com.haru.api.workspace.application.port.out.WorkspacePort;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.domain.WorkspaceInvitation;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.presentation.dto.WorkspaceRequestDTO;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
@@ -43,6 +49,14 @@ class WorkspaceCommandUseCaseImplTest {
     private WorkspacePort workspacePort;
     @Mock
     private UserWorkspacePort userWorkspacePort;
+    @Mock
+    private WorkspaceInvitationPort workspaceInvitationPort;
+    @Mock
+    private UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
+    @Mock
+    private UserQueryUseCase userQueryUseCase;
+    @Mock
+    private DocumentQueryUseCase documentQueryUseCase;
 
     @Test
     @DisplayName("워크스페이스 생성 성공 - 이미지 포함")
@@ -193,5 +207,92 @@ class WorkspaceCommandUseCaseImplTest {
         verify(amazonS3Manager).generateKeyName("workspace/image");
         verify(amazonS3Manager).uploadMultipartFile(newKeyName, firstImage);
         verify(workspacePort).save(workspace);
+    }
+
+    @Test
+    @DisplayName("초대 수락 실패 - 유효하지 않은 토큰")
+    void acceptInvite_fail_when_token_not_found() {
+
+        // given
+        String invalidToken = "invalid-token";
+        given(workspaceInvitationPort.findByToken(invalidToken)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.acceptInvite(invalidToken))
+                .isInstanceOf(WorkspaceInvitationHandler.class)
+                .hasMessageContaining("초대 코드에 해당하는 초대장이 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("초대 수락 실패 - 이미 수락된 초대장")
+    void acceptInvite_fail_when_already_accepted() {
+
+        // given
+        String token = "valid-token";
+        WorkspaceInvitation acceptedInvitation = spy(WorkspaceInvitation.builder().build());
+
+        given(workspaceInvitationPort.findByToken(token)).willReturn(Optional.of(acceptedInvitation));
+        given(acceptedInvitation.isAccepted()).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.acceptInvite(token))
+                .isInstanceOf(WorkspaceInvitationHandler.class)
+                .hasMessageContaining("이미 초대가 수락된 초대장입니다.");
+    }
+
+    @Test
+    @DisplayName("초대 수락 - 미가입 사용자")
+    void acceptInvite_when_user_not_registered() {
+
+        // given
+        String token = "valid-token";
+        String inviteeEmail = "new@test.com";
+        Workspace workspace = Workspace.builder().id(1L).build();
+        WorkspaceInvitation invitation = WorkspaceInvitation.builder().email(inviteeEmail).workspace(workspace).isAccepted(false).build();
+
+        given(workspaceInvitationPort.findByToken(token)).willReturn(Optional.of(invitation));
+        given(userQueryUseCase.findOptionalUserByEmail(inviteeEmail)).willReturn(Optional.empty());
+
+        // when
+        WorkspaceResponseDTO.InvitationAcceptResult response = workspaceCommandUseCase.acceptInvite(token);
+
+        // then
+        assertThat(response.isSuccess()).isFalse();
+        assertThat(response.isAlreadyRegistered()).isFalse();
+
+        // 유저가 없으므로 초대장 상태 변경이나 저장은 일어나면 안 됨
+        verify(workspaceInvitationPort, never()).save(any());
+        verify(userWorkspacePort, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("초대 수락 성공 - 기가입 사용자")
+    void acceptInvite_success_when_user_is_registered() {
+
+        // given
+        String token = "valid-token";
+        String inviteeEmail = "existing@test.com";
+        User existingUser = User.builder().id(100L).email(inviteeEmail).build();
+        Workspace workspace = Workspace.builder().id(1L).build();
+        WorkspaceInvitation invitation = WorkspaceInvitation.builder().email(inviteeEmail).workspace(workspace).isAccepted(false).build();
+
+        given(workspaceInvitationPort.findByToken(token)).willReturn(Optional.of(invitation));
+        given(userQueryUseCase.findOptionalUserByEmail(inviteeEmail)).willReturn(Optional.of(existingUser));
+
+        // when
+        WorkspaceResponseDTO.InvitationAcceptResult response = workspaceCommandUseCase.acceptInvite(token);
+
+        // then
+        assertThat(response.isSuccess()).isTrue();
+        assertThat(response.isAlreadyRegistered()).isTrue();
+        assertThat(response.getWorkspaceId()).isEqualTo(workspace.getId());
+
+        // 초대장의 isAccepted가 true로 변경되어 저장되었는지 검증
+        // private 메서드 내부에서 호출하는 Port들이 올바르게 호출되었는지 확인
+        verify(userWorkspacePort).save(any(UserWorkspace.class));
+        verify(userDocumentLastOpenedCommandUseCase).saveAll(anyList());
+
+        // 초대장 상태 변경 검증
+        verify(workspaceInvitationPort).save(any(WorkspaceInvitation.class));
     }
 }
