@@ -295,4 +295,70 @@ class WorkspaceCommandUseCaseImplTest {
         // 초대장 상태 변경 검증
         verify(workspaceInvitationPort).save(any(WorkspaceInvitation.class));
     }
+
+    @Test
+    @DisplayName("신규 유저 초대 수락 실패 - 유효하지 않은 토큰")
+    void acceptInvite_forNewUser_fail_when_token_not_found() {
+
+        // given
+        String invalidToken = "invalid-token";
+        User newUser = User.builder().id(1L).build();
+        given(workspaceInvitationPort.findByToken(invalidToken)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.acceptInvite(invalidToken, newUser))
+                .isInstanceOf(WorkspaceInvitationHandler.class)
+                .hasMessageContaining("초대 코드에 해당하는 초대장이 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("신규 유저 초대 수락 실패 - 이미 수락된 초대장")
+    void acceptInvite_forNewUser_fail_when_already_accepted() {
+
+        // given
+        String token = "valid-token";
+        User newUser = User.builder().id(1L).build();
+
+        WorkspaceInvitation acceptedInvitation = mock(WorkspaceInvitation.class);
+        given(acceptedInvitation.isAccepted()).willReturn(true);
+        given(workspaceInvitationPort.findByToken(token)).willReturn(Optional.of(acceptedInvitation));
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.acceptInvite(token, newUser))
+                .isInstanceOf(WorkspaceInvitationHandler.class)
+                .hasMessageContaining("이미 초대가 수락된 초대장입니다.");
+    }
+
+    @Test
+    @DisplayName("신규 유저 초대 수락 성공")
+    void acceptInvite_forNewUser_success() {
+
+        // given
+        String token = "valid-token";
+        User newUser = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        WorkspaceInvitation invitation = WorkspaceInvitation.builder()
+                .workspace(workspace)
+                .isAccepted(false)
+                .build();
+
+        given(workspaceInvitationPort.findByToken(token)).willReturn(Optional.of(invitation));
+        given(userWorkspacePort.save(any(UserWorkspace.class))).willAnswer(inv -> inv.getArgument(0));
+
+        // when
+        workspaceCommandUseCase.acceptInvite(token, newUser);
+
+        // then
+        // 초대장의 상태가 '수락됨(accepted)'으로 변경되어 저장되었는지 검증
+        ArgumentCaptor<WorkspaceInvitation> invitationCaptor = ArgumentCaptor.forClass(WorkspaceInvitation.class);
+        verify(workspaceInvitationPort).save(invitationCaptor.capture());
+        assertThat(invitationCaptor.getValue().isAccepted()).isTrue();
+
+        // UserWorkspacePort.save가 호출되었는지 검증
+        ArgumentCaptor<UserWorkspace> userWorkspaceCaptor = ArgumentCaptor.forClass(UserWorkspace.class);
+        verify(userWorkspacePort).save(userWorkspaceCaptor.capture());
+
+        // 저장된 UserWorkspace 객체의 user가 파라미터로 받은 newUser와 일치하는지 검증
+        assertThat(userWorkspaceCaptor.getValue().getUser()).isEqualTo(newUser);
+    }
 }
