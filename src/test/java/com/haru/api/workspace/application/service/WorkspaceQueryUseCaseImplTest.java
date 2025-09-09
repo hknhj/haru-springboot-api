@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkspaceQueryUseCaseImplTest {
@@ -284,5 +284,68 @@ class WorkspaceQueryUseCaseImplTest {
         assertThat(response.getImageUrl()).isEqualTo(fakePresignedUrl);
         assertThat(response.getMembers()).isNotNull();
         assertThat(response.getMembers()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("최근 문서 목록 조회 성공")
+    void getRecentDocuments_success() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+
+        UserDocumentLastOpened doc1 = UserDocumentLastOpened.builder()
+                .id(new UserDocumentId(user.getId(), 5L, DocumentType.AI_MEETING_MANAGER))
+                .title("test document 1")
+                .thumbnailKeyName("thumb1.jpg")
+                .build();
+        UserDocumentLastOpened doc2 = UserDocumentLastOpened.builder()
+                .id(new UserDocumentId(user.getId(), 7L, DocumentType.SNS_EVENT_ASSISTANT))
+                .title("test document 2")
+                .thumbnailKeyName("thumb2.jpg")
+                .build();
+        List<UserDocumentLastOpened> fakeRecentDocumentList = List.of(doc1, doc2);
+
+        given(userDocumentLastOpenedQueryUseCase.getRecentDocuments(eq(user.getId()), eq(workspace.getId()), any(PageRequest.class)))
+                .willReturn(fakeRecentDocumentList);
+        given(amazonS3Manager.generatePresignedUrl("thumb1.jpg")).willReturn("presigned-url-1");
+        given(amazonS3Manager.generatePresignedUrl("thumb2.jpg")).willReturn("presigned-url-2");
+
+        // when
+        WorkspaceResponseDTO.RecentDocumentList response = workspaceQueryUseCase.getDocumentsForMainPage(user, workspace);
+
+        // then - 결과 검증
+        // 상태 검증: 반환된 DTO의 크기와 내용(Presigned URL 포함) 확인
+        assertThat(response.getDocuments()).hasSize(2);
+        assertThat(response.getDocuments().get(0).getTitle()).isEqualTo(doc1.getTitle());
+        assertThat(response.getDocuments().get(0).getThumbnailUrl()).isEqualTo("presigned-url-1");
+        assertThat(response.getDocuments().get(1).getThumbnailUrl()).isEqualTo("presigned-url-2");
+
+        // 행위 검증: 의존 객체들이 올바르게 호출되었는지 확인
+        verify(userDocumentLastOpenedQueryUseCase).getRecentDocuments(eq(user.getId()), eq(workspace.getId()), any(PageRequest.class));
+        verify(amazonS3Manager, times(1)).generatePresignedUrl("thumb1.jpg");
+        verify(amazonS3Manager, times(1)).generatePresignedUrl("thumb2.jpg");
+    }
+
+    @Test
+    @DisplayName("최근 문서 목록 조회 - 결과 없음")
+    void getRecentDocuments_returns_empty_list_when_no_documents() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+
+        given(userDocumentLastOpenedQueryUseCase.getRecentDocuments(eq(user.getId()), eq(workspace.getId()), any(PageRequest.class)))
+                .willReturn(Collections.emptyList());
+
+        // when
+        WorkspaceResponseDTO.RecentDocumentList response = workspaceQueryUseCase.getDocumentsForMainPage(user, workspace);
+
+        // then
+        assertThat(response.getDocuments()).isNotNull();
+        assertThat(response.getDocuments()).isEmpty();
+
+        // S3 Manager는 한 번도 호출되지 않아야 함
+        verify(amazonS3Manager, never()).generatePresignedUrl(anyString());
     }
 }

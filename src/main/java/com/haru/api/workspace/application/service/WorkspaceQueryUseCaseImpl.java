@@ -89,7 +89,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     }
 
     @Override
-    public WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace) {
+    public WorkspaceResponseDTO.RecentDocumentList getDocumentsForMainPage(User user, Workspace workspace) {
 
         List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedQueryUseCase.getRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
 
@@ -101,6 +101,5 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
                         })
                         .toList()
         );
-
     }
 }

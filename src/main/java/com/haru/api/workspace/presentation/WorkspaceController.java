@@ -205,7 +205,7 @@ public class WorkspaceController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
 
-        WorkspaceResponseDTO.RecentDocumentList recentDocuments = workspaceQueryUseCase.getRecentDocuments(user, workspace);
+        WorkspaceResponseDTO.RecentDocumentList recentDocuments = workspaceQueryUseCase.getDocumentsForMainPage(user, workspace);
 
         return ApiResponse.onSuccess(recentDocuments);
     }
