@@ -8,6 +8,7 @@ import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,18 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
         documentList.addAll(meetingRepository.findAllByWorkspaceId(workspaceId));
         documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspaceId));
         documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspaceId));
+
+        return documentList;
+    }
+
+    @Override
+    public List<Documentable> getAllDocumentsForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate) {
+
+        List<Documentable> documentList = new ArrayList<>();
+
+        documentList.addAll(meetingRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(snsEventRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
 
         return documentList;
     }

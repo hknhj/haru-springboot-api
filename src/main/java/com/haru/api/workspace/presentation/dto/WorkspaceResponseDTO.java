@@ -25,7 +25,8 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class Document {
-        private String documentId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long documentId;
         private String title;
         private DocumentType documentType;
         private LocalDateTime lastOpened;
@@ -40,16 +41,17 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class InvitationAcceptResult {
-        private boolean isSuccess;
-        private boolean isAlreadyRegistered;
         @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
+        private boolean isSuccess;
+        private boolean isAlreadyRegistered;
     }
 
     @Getter
     @Builder
     public static class DocumentSidebar {
-        private String documentId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long documentId;
         private String title;
         private DocumentType documentType;
     }
@@ -63,7 +65,8 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class DocumentCalendar {
-        private String documentId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long documentId;
         private String title;
         private DocumentType documentType;
         @JsonFormat(pattern = "yyyy-MM-dd")
@@ -93,7 +96,9 @@ public class WorkspaceResponseDTO {
     @Getter
     @Builder
     public static class RecentDocument {
-        private String documentId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long workspaceId;
+        private Long documentId;
         private String title;
         private DocumentType documentType;
         private String thumbnailUrl;

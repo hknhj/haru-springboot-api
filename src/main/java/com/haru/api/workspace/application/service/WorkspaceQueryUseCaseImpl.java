@@ -1,18 +1,14 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
-import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
-import com.haru.api.meeting.domain.Meeting;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
-import com.haru.api.moodTracker.domain.MoodTracker;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
-import com.haru.api.snsEvent.domain.SnsEvent;
-import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
-import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
+import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.converter.WorkspaceConverter;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import com.haru.api.workspace.domain.Workspace;
@@ -32,35 +28,34 @@ import java.util.*;
 @Transactional(readOnly = true)
 public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
 
-    private final MeetingRepository meetingRepository;
-    private final SnsEventRepository snsEventRepository;
-    private final MoodTrackerRepository moodTrackerRepository;
-    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
-    private final WorkspaceConverter workspaceConverter;
+    private final UserWorkspacePort userWorkspacePort;
+
+    private final DocumentQueryUseCase documentQueryUseCase;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
+
     private final AmazonS3Manager amazonS3Manager;
 
     @Override
-    public WorkspaceResponseDTO.DocumentList getDocuments(User user, Workspace workspace, String title) {
+    public WorkspaceResponseDTO.DocumentList getDocumentsByTitle(User user, Workspace workspace, String title) {
 
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedJpaRepository.findRecentDocumentsByTitle(user.getId(), workspace.getId(), title);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.findRecentDocumentsByTitle(user.getId(), workspace.getId(), title);
 
         return WorkspaceConverter.toDocumentList(
                 documentList.stream()
-                        .map(workspaceConverter::toDocument)
+                        .map(WorkspaceConverter::toDocument)
                         .toList()
         );
     }
 
     @Override
-    public WorkspaceResponseDTO.DocumentSidebarList getDocumentWithoutLastOpenedList(User user, Workspace workspace) {
+    public WorkspaceResponseDTO.DocumentSidebarList getDocumentsForSidebar(User user, Workspace workspace) {
 
         // 유저가 가장 최근에 조회한 문서 5개 추출
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedJpaRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,5));
 
         return WorkspaceConverter.toDocumentSidebarList(
                 documentList.stream()
-                        .map(workspaceConverter::toDocumentSidebar)
+                        .map(WorkspaceConverter::toDocumentSidebar)
                         .toList()
         );
     }
@@ -72,34 +67,38 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         // 워크스페이스에 속하면서 생성 날짜가 startDate, endDate 사이인 문서 리스트 검색
-        List<Meeting> meetingList = meetingRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
-        List<SnsEvent> snsEventList = snsEventRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
-        List<MoodTracker> moodTrackerList = moodTrackerRepository.findAllDocumentForCalendars(workspace.getId(), startDateTime, endDateTime);
+        List<Documentable> documentList = documentQueryUseCase.getAllDocumentsForCalendars(workspace.getId(), startDateTime, endDateTime);
 
         // 모든 문서 합치기
-        return workspaceConverter.toDocumentCalendarList(meetingList, snsEventList, moodTrackerList);
+        return WorkspaceConverter.toDocumentCalendarList(
+                documentList.stream()
+                        .map(WorkspaceConverter::toDocumentCalender)
+                        .toList());
     }
 
     @Override
     public WorkspaceResponseDTO.WorkspaceEditPage getEditPage(User user, Workspace workspace) {
 
-        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspaceJpaRepository.findUsersByWorkspaceId(workspace.getId()).stream()
+        List<UserResponseDTO.MemberInfo> memberInfoList = userWorkspacePort.findUsersByWorkspaceId(workspace.getId()).stream()
                 .map(UserConverter::toMemberInfo)
                 .toList();
 
         String imageUrl = amazonS3Manager.generatePresignedUrl(workspace.getKeyName());
 
-        return workspaceConverter.toWorkspaceEditPage(workspace, memberInfoList, imageUrl);
+        return WorkspaceConverter.toWorkspaceEditPage(workspace, memberInfoList, imageUrl);
     }
 
     @Override
     public WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace) {
 
-        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedJpaRepository.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
+        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedQueryUseCase.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
 
-        return workspaceConverter.toRecentDocumentList(
+        return WorkspaceConverter.toRecentDocumentList(
                 recentDocumentList.stream()
-                        .map(workspaceConverter::toRecentDocument)
+                        .map(recentDocument -> {
+                            String presignedUrl = amazonS3Manager.generatePresignedUrl(recentDocument.getThumbnailKeyName());
+                            return WorkspaceConverter.toRecentDocument(recentDocument, presignedUrl);
+                        })
                         .toList()
         );
 

@@ -123,7 +123,7 @@ public class WorkspaceController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
 
     ) {
-        WorkspaceResponseDTO.DocumentList documentList = workspaceQueryUseCase.getDocuments(user, workspace, title);
+        WorkspaceResponseDTO.DocumentList documentList = workspaceQueryUseCase.getDocumentsByTitle(user, workspace, title);
 
         return ApiResponse.onSuccess(documentList);
     }
@@ -153,7 +153,7 @@ public class WorkspaceController {
             @Parameter(hidden = true) @AuthUser User user,
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
-        WorkspaceResponseDTO.DocumentSidebarList documentSidebarList = workspaceQueryUseCase.getDocumentWithoutLastOpenedList(user, workspace);
+        WorkspaceResponseDTO.DocumentSidebarList documentSidebarList = workspaceQueryUseCase.getDocumentsForSidebar(user, workspace);
 
         return ApiResponse.onSuccess(documentSidebarList);
     }
