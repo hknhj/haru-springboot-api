@@ -38,7 +38,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     @Override
     public WorkspaceResponseDTO.DocumentList getDocumentsByTitle(User user, Workspace workspace, String title) {
 
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.findRecentDocumentsByTitle(user.getId(), workspace.getId(), title);
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.getRecentDocumentsByTitle(user.getId(), workspace.getId(), title);
 
         return WorkspaceConverter.toDocumentList(
                 documentList.stream()
@@ -51,7 +51,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     public WorkspaceResponseDTO.DocumentSidebarList getDocumentsForSidebar(User user, Workspace workspace) {
 
         // 유저가 가장 최근에 조회한 문서 5개 추출
-        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,5));
+        List<UserDocumentLastOpened> documentList = userDocumentLastOpenedQueryUseCase.getRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,5));
 
         return WorkspaceConverter.toDocumentSidebarList(
                 documentList.stream()
@@ -91,7 +91,7 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
     @Override
     public WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace) {
 
-        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedQueryUseCase.findRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
+        List<UserDocumentLastOpened> recentDocumentList = userDocumentLastOpenedQueryUseCase.getRecentDocuments(user.getId(), workspace.getId(), PageRequest.of(0,8));
 
         return WorkspaceConverter.toRecentDocumentList(
                 recentDocumentList.stream()

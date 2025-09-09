@@ -16,12 +16,12 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
     private final UserDocumentLastOpenedPort userDocumentLastOpenedPort;
 
     @Override
-    public List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long userId, Long workspaceId, String title) {
+    public List<UserDocumentLastOpened> getRecentDocumentsByTitle(Long userId, Long workspaceId, String title) {
         return userDocumentLastOpenedPort.findRecentDocumentsByTitle(userId, workspaceId, title);
     }
 
     @Override
-    public List<UserDocumentLastOpened> findRecentDocuments(Long userId, Long workspaceId, PageRequest pageRequest) {
+    public List<UserDocumentLastOpened> getRecentDocuments(Long userId, Long workspaceId, PageRequest pageRequest) {
         return userDocumentLastOpenedPort.findRecentDocuments(userId, workspaceId, pageRequest);
     }
 }
