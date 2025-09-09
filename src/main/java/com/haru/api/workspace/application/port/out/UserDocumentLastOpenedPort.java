@@ -12,6 +12,10 @@ public interface UserDocumentLastOpenedPort {
 
     UserDocumentLastOpened save(UserDocumentLastOpened userDocumentLastOpened);
 
+    void saveAll(List<UserDocumentLastOpened> recordsToSave);
+
+    void deleteAll(List<UserDocumentLastOpened> recordsToDelete);
+
     Optional<UserDocumentLastOpened> findById(UserDocumentId id);
 
     List<UserDocumentLastOpened> findRecentDocuments(Long userId, Long workspaceId, Pageable pageable);

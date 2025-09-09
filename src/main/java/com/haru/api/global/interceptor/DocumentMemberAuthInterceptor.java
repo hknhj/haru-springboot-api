@@ -106,7 +106,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
             };
 
             // 유저 조회
-            User foundUser = userPort.findUserById(userId)
+            User foundUser = userPort.findById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // request에 attribute 저장

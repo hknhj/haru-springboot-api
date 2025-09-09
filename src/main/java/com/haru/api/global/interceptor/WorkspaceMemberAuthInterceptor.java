@@ -72,7 +72,7 @@ public class WorkspaceMemberAuthInterceptor implements HandlerInterceptor {
             final Long userId = SecurityUtil.getCurrentUserId();
 
             // 유저 조회
-            User foundUser = userPort.findUserById(userId)
+            User foundUser = userPort.findById(userId)
                     .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
             // 워크스페이스 조회

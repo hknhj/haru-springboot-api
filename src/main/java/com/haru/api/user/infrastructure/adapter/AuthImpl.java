@@ -38,7 +38,7 @@ public class AuthImpl implements AuthPort {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // jwt토큰(access token, refresh token) 생성
-        User getUser = userPort.findUserByEmail(authentication.getName())
+        User getUser = userPort.findByEmail(authentication.getName())
                 .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
 
         String key = "users:" + getUser.getId().toString();

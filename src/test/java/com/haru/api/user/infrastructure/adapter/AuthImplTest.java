@@ -95,7 +95,7 @@ class AuthImplTest {
         given(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).willReturn(authentication);
         given(authentication.getName()).willReturn(fakeUser.getEmail());
 
-        given(userPort.findUserByEmail(testEmail)).willReturn(Optional.of(fakeUser));
+        given(userPort.findByEmail(testEmail)).willReturn(Optional.of(fakeUser));
         given(jwtUtils.generateAccessToken(fakeUser.getId())).willReturn(fakeAccessToken);
         given(jwtUtils.generateAndSaveRefreshToken(any(String.class))).willReturn(fakeRefreshToken);
 
@@ -108,7 +108,7 @@ class AuthImplTest {
         assertThat(response.getRefreshToken()).isEqualTo(fakeRefreshToken);
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(userPort).findUserByEmail(fakeUser.getEmail());
+        verify(userPort).findByEmail(fakeUser.getEmail());
         verify(jwtUtils).generateAccessToken(fakeUser.getId());
 
     }

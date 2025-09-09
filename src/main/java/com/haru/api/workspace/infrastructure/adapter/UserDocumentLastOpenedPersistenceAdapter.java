@@ -24,6 +24,16 @@ public class UserDocumentLastOpenedPersistenceAdapter implements UserDocumentLas
     }
 
     @Override
+    public void saveAll(List<UserDocumentLastOpened> recordsToSave) {
+        userDocumentLastOpenedJpaRepository.saveAll(recordsToSave);
+    }
+
+    @Override
+    public void deleteAll(List<UserDocumentLastOpened> recordsToDelete) {
+        userDocumentLastOpenedJpaRepository.deleteAllInBatch(recordsToDelete);
+    }
+
+    @Override
     public Optional<UserDocumentLastOpened> findById(UserDocumentId id) {
         return userDocumentLastOpenedJpaRepository.findById(id);
     }

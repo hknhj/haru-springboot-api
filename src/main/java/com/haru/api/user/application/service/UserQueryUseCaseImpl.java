@@ -1,5 +1,7 @@
 package com.haru.api.user.application.service;
 
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
@@ -35,5 +37,11 @@ public class UserQueryUseCaseImpl implements UserQueryUseCase {
                         .name(eachUser.getName())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public User findUserById(Long userId) {
+        return userPort.findById(userId)
+                .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 }

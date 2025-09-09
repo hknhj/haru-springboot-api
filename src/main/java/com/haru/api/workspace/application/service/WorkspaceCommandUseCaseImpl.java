@@ -130,7 +130,7 @@ public class WorkspaceCommandUseCaseImpl implements WorkspaceCommandUseCase {
             throw new WorkspaceInvitationHandler(ErrorStatus.ALREADY_ACCEPTED);
 
         // 초대받은 이메일로 가입된 사용자가 있는지 확인
-        Optional<User> foundUser = userPort.findUserByEmail(foundWorkspaceInvitation.getEmail());
+        Optional<User> foundUser = userPort.findByEmail(foundWorkspaceInvitation.getEmail());
 
         boolean isAlreadyRegistered = foundUser.isPresent();
 
