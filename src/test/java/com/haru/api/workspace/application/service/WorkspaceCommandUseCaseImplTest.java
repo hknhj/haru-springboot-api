@@ -1,11 +1,15 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.port.out.WorkspacePort;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.presentation.dto.WorkspaceRequestDTO;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -18,12 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkspaceCommandUseCaseImplTest {
@@ -100,5 +106,92 @@ class WorkspaceCommandUseCaseImplTest {
         ArgumentCaptor<Workspace> workspaceCaptor = ArgumentCaptor.forClass(Workspace.class);
         verify(workspacePort).save(workspaceCaptor.capture());
         assertThat(workspaceCaptor.getValue().getKeyName()).isNull();
+    }
+
+    @Test
+    @DisplayName("워크스페이스 수정 실패 - 멤버가 아님")
+    void updateWorkspace_fail_when_not_member() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        WorkspaceRequestDTO.WorkspaceUpdateRequest request = new WorkspaceRequestDTO.WorkspaceUpdateRequest("new title");
+
+        given(userWorkspacePort.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.updateWorkspace(user, workspace, request, null))
+                .isInstanceOf(UserWorkspaceHandler.class)
+                .hasMessageContaining("해당 유저가 해당 워크스페이스에 속해있지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("워크스페이스 수정 실패 - 어드민이 아님")
+    void updateWorkspace_fail_when_not_admin() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder().id(10L).build();
+        WorkspaceRequestDTO.WorkspaceUpdateRequest request = new WorkspaceRequestDTO.WorkspaceUpdateRequest("new title");
+        UserWorkspace member = UserWorkspace.builder().auth(Auth.MEMBER).build();
+
+        given(userWorkspacePort.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())).willReturn(Optional.of(member));
+
+        // when & then
+        assertThatThrownBy(() -> workspaceCommandUseCase.updateWorkspace(user, workspace, request, null))
+                .isInstanceOf(WorkspaceHandler.class)
+                .hasMessageContaining("워크스페이스 수정 권한이 없습니다.");
+    }
+
+    @Test
+    @DisplayName("워크스페이스 수정 성공 - 제목과 이미지 모두 변경 (기존 이미지 있음)")
+    void updateWorkspace_success_with_title_and_image() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = spy(Workspace.builder().id(10L).keyName("existing-key.jpg").build());
+        WorkspaceRequestDTO.WorkspaceUpdateRequest request = new WorkspaceRequestDTO.WorkspaceUpdateRequest("new title");
+        MockMultipartFile newImage = new MockMultipartFile("image", "new.jpg", "image/jpeg", "new image".getBytes());
+        UserWorkspace admin = UserWorkspace.builder().auth(Auth.ADMIN).build();
+
+        given(userWorkspacePort.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())).willReturn(Optional.of(admin));
+        given(amazonS3Manager.generatePresignedUrl(anyString())).willReturn("presigned-url");
+
+        // when
+        WorkspaceResponseDTO.Workspace response = workspaceCommandUseCase.updateWorkspace(user, workspace, request, newImage);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("new title");
+        assertThat(response.getImageUrl()).isEqualTo("presigned-url");
+
+        verify(workspace).updateTitle("new title");
+        verify(amazonS3Manager, never()).generateKeyName(anyString());
+        verify(amazonS3Manager).uploadMultipartFile("existing-key.jpg", newImage);
+        verify(workspacePort).save(workspace);
+    }
+
+    @Test
+    @DisplayName("워크스페이스 수정 성공 - 첫 이미지 등록")
+    void updateWorkspace_success_with_first_image() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = spy(Workspace.builder().id(10L).keyName(null).build());
+        WorkspaceRequestDTO.WorkspaceUpdateRequest request = new WorkspaceRequestDTO.WorkspaceUpdateRequest("new title");
+        MockMultipartFile firstImage = new MockMultipartFile("image", "first.jpg", "image/jpeg", "first image".getBytes());
+        UserWorkspace admin = UserWorkspace.builder().auth(Auth.ADMIN).build();
+
+        String newKeyName = "workspace/image/new-key.jpg";
+        given(userWorkspacePort.findByWorkspaceIdAndUserId(workspace.getId(), user.getId())).willReturn(Optional.of(admin));
+        given(amazonS3Manager.generateKeyName(anyString())).willReturn(newKeyName);
+
+        // when
+        workspaceCommandUseCase.updateWorkspace(user, workspace, request, firstImage);
+
+        // then
+        verify(workspace).initKeyName(newKeyName);
+        verify(amazonS3Manager).generateKeyName("workspace/image");
+        verify(amazonS3Manager).uploadMultipartFile(newKeyName, firstImage);
+        verify(workspacePort).save(workspace);
     }
 }
