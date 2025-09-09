@@ -1,4 +1,4 @@
-package com.haru.api.workspace.application.port.in;
+package com.haru.api.user.application.port.in;
 
 import com.haru.api.global.common.Documentable;
 import com.haru.api.user.domain.UserDocumentId;

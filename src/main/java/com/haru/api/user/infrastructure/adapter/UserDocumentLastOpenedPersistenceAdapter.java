@@ -1,6 +1,6 @@
 package com.haru.api.user.infrastructure.adapter;
 
-import com.haru.api.workspace.application.port.out.UserDocumentLastOpenedPort;
+import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.enums.DocumentType;

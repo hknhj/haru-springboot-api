@@ -1,4 +1,4 @@
-package com.haru.api.workspace.application.port.out;
+package com.haru.api.user.application.port.out;
 
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;

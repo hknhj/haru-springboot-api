@@ -1,7 +1,7 @@
 package com.haru.api.global.aspect;
 
 import com.haru.api.global.common.Documentable;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;

@@ -3,7 +3,7 @@ package com.haru.api.workspace.application.service;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.application.converter.UserDocumentLastOpenedConverter;
 import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
-import com.haru.api.workspace.application.port.out.UserDocumentLastOpenedPort;
+import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.port.out.WorkspaceInvitationPort;
 import com.haru.api.workspace.application.port.out.WorkspacePort;

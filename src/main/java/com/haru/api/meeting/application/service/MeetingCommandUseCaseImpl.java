@@ -3,7 +3,7 @@ package com.haru.api.meeting.application.service;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;

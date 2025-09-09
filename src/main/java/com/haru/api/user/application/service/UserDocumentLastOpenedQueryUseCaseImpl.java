@@ -1,9 +1,11 @@
-package com.haru.api.workspace.application.service;
+package com.haru.api.user.application.service;
 
-import com.haru.api.user.application.port.in.UserQueryUseCase;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
-import com.haru.api.workspace.application.port.out.UserDocumentLastOpenedPort;
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.global.common.Documentable;
+import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
@@ -24,7 +26,7 @@ import java.util.List;
 public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastOpenedQueryUseCase {
 
     private final UserDocumentLastOpenedPort userDocumentLastOpenedPort;
-    private final UserQueryUseCase userQueryUseCase;
+    private final UserPort userPort;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -32,7 +34,8 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
 
         UserDocumentLastOpened record = userDocumentLastOpenedPort.findById(userDocumentId)
                 .orElseGet(() -> {
-                    User foundUser = userQueryUseCase.findUserById(userDocumentId.getUserId());
+                    User foundUser = userPort.findById(userDocumentId.getUserId())
+                            .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_NOT_FOUND));
                     return UserDocumentLastOpened.builder()
                             .id(userDocumentId)
                             .user(foundUser)

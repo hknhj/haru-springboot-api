@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.application.service;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
 import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;

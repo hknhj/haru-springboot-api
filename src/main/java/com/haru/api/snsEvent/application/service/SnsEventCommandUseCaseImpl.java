@@ -1,7 +1,7 @@
 package com.haru.api.snsEvent.application.service;
 
 import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
-import com.haru.api.workspace.application.port.in.UserDocumentLastOpenedQueryUseCase;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
