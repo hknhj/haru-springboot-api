@@ -20,6 +20,8 @@ import java.util.List;
 @DynamicUpdate
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Meeting extends BaseEntity implements Documentable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,7 +66,7 @@ public class Meeting extends BaseEntity implements Documentable {
     @Setter
     private String audioFileKey;
 
-    private Meeting(String title, String agendaResult, User user, Workspace workspace) {
+    public Meeting(String title, String agendaResult, User user, Workspace workspace) {
         this.title = title;
         this.agendaResult = agendaResult;
         this.creator = user;

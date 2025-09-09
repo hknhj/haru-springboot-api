@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface UserDocumentLastOpenedQueryUseCase {
 
-    List<UserDocumentLastOpened> findRecentDocumentsByTitle(Long userId, Long workspaceId, String title);
+    List<UserDocumentLastOpened> getRecentDocumentsByTitle(Long userId, Long workspaceId, String title);
 
-    List<UserDocumentLastOpened> findRecentDocuments(Long userId, Long workspaceId, PageRequest pageRequest);
+    List<UserDocumentLastOpened> getRecentDocuments(Long userId, Long workspaceId, PageRequest pageRequest);
 
 }

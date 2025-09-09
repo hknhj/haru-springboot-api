@@ -54,5 +54,5 @@ public interface WorkspaceQueryUseCase {
      * @param workspace
      * @return
      */
-    WorkspaceResponseDTO.RecentDocumentList getRecentDocuments(User user, Workspace workspace);
+    WorkspaceResponseDTO.RecentDocumentList getDocumentsForMainPage(User user, Workspace workspace);
 }
