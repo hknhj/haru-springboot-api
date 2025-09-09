@@ -1,5 +1,6 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.shared_kernel.domain.Documentable;
@@ -9,6 +10,7 @@ import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.enums.DocumentType;
+import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -37,10 +39,16 @@ class WorkspaceQueryUseCaseImplTest {
     private WorkspaceQueryUseCaseImpl workspaceQueryUseCase;
 
     @Mock
+    private UserWorkspacePort userWorkspacePort;
+
+    @Mock
     private UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     @Mock
     private DocumentQueryUseCase documentQueryUseCase;
+
+    @Mock
+    private AmazonS3Manager amazonS3Manager;
 
     @Test
     @DisplayName("문서 제목으로 검색 성공")
@@ -216,5 +224,65 @@ class WorkspaceQueryUseCaseImplTest {
         verify(documentQueryUseCase).getAllDocumentsForCalendars(eq(workspace.getId()), any(LocalDateTime.class), any(LocalDateTime.class));
         assertThat(response.getDocumentList()).isNotNull();
         assertThat(response.getDocumentList()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("워크스페이스 편집 페이지 조회 성공")
+    void getEditPage_success() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder()
+                .id(10L)
+                .keyName("image-key.jpg")
+                .build();
+
+        User member1 = User.builder().id(2L).name("member1").build();
+        User member2 = User.builder().id(3L).name("member2").build();
+        List<User> fakeMemberList = List.of(member1, member2);
+
+        String fakePresignedUrl = "https://s3.amazonaws.com/bucket/image-key.jpg?presigned-signature";
+
+        given(userWorkspacePort.findUsersByWorkspaceId(workspace.getId())).willReturn(fakeMemberList);
+        given(amazonS3Manager.generatePresignedUrl(workspace.getKeyName())).willReturn(fakePresignedUrl);
+
+        // when
+        WorkspaceResponseDTO.WorkspaceEditPage response = workspaceQueryUseCase.getEditPage(user, workspace);
+
+        // then
+        // 행위 검증: 의존 객체들이 올바른 인자로 호출되었는지 확인
+        verify(userWorkspacePort).findUsersByWorkspaceId(workspace.getId());
+        verify(amazonS3Manager).generatePresignedUrl(workspace.getKeyName());
+
+        // 상태 검증: 반환된 DTO의 내용이 올바른지 확인
+        assertThat(response.getImageUrl()).isEqualTo(fakePresignedUrl);
+        assertThat(response.getMembers()).hasSize(2);
+        assertThat(response.getMembers().get(0).getName()).isEqualTo(member1.getName());
+        assertThat(response.getMembers().get(1).getName()).isEqualTo(member2.getName());
+    }
+
+    @Test
+    @DisplayName("워크스페이스 편집 페이지 조회 성공 - 멤버 없음")
+    void getEditPage_success_when_no_members() {
+
+        // given
+        User user = User.builder().id(1L).build();
+        Workspace workspace = Workspace.builder()
+                .id(10L)
+                .keyName("image-key.jpg")
+                .build();
+
+        String fakePresignedUrl = "https://s3.amazonaws.com/bucket/image-key.jpg?presigned-signature";
+
+        given(userWorkspacePort.findUsersByWorkspaceId(workspace.getId())).willReturn(Collections.emptyList());
+        given(amazonS3Manager.generatePresignedUrl(workspace.getKeyName())).willReturn(fakePresignedUrl);
+
+        // when
+        WorkspaceResponseDTO.WorkspaceEditPage response = workspaceQueryUseCase.getEditPage(user, workspace);
+
+        // then
+        assertThat(response.getImageUrl()).isEqualTo(fakePresignedUrl);
+        assertThat(response.getMembers()).isNotNull();
+        assertThat(response.getMembers()).isEmpty();
     }
 }
