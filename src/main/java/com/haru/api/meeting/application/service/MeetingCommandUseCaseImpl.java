@@ -1,21 +1,22 @@
 package com.haru.api.meeting.application.service;
 
+import com.haru.api.global.annotation.CreateDocument;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
 import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.user.domain.User;
+import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.DeleteDocument;
-import com.haru.api.global.annotation.UpdateDocumentTitle;
+import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
@@ -53,7 +54,6 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
     private final MeetingPort meetingPort;
 
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
-    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
     private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     private final AmazonS3Manager amazonS3Manager;
@@ -65,6 +65,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
     @Override
     @Transactional
+    @CreateDocument(documentType = AI_MEETING_MANAGER)
     public MeetingResponseDTO.createMeetingResponse createMeeting(
             User user,
             Workspace workspace,
@@ -87,11 +88,6 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
         Meeting savedMeeting = meetingPort.save(newMeeting);
 
-        // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceQueryUseCase.getWorkspaceMembers(workspace.getId());
-        userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
-
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }
 
@@ -99,7 +95,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
     @Override
     @Transactional
-    @UpdateDocumentTitle
+    @UpdateDocument
     public void updateMeetingTitle(User user, Meeting meeting, MeetingRequestDTO.updateTitle request) {
 
         // 회의 생성자 권한 확인

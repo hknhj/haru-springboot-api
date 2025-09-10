@@ -1,10 +1,12 @@
 package com.haru.api.user.application.port.in;
 
+import com.haru.api.shared_kernel.domain.CreatedDocument;
 import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.User;
 import com.haru.api.shared_kernel.domain.DocumentModifier;
 import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 
 import java.util.List;
 
@@ -17,6 +19,8 @@ public interface UserDocumentLastOpenedCommandUseCase {
      * @param document
      */
     void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, Documentable document);
+
+    void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, CreatedDocument createdDocument, Long workspaceId, DocumentType documentType);
 
     /**
      * 유저가 특정 문서를 조회 시, 해당 문서의 UserDocumentLastOpened를 업데이트하는 메서드

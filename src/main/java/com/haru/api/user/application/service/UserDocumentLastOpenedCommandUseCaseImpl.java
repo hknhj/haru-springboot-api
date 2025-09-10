@@ -2,6 +2,7 @@ package com.haru.api.user.application.service;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
+import com.haru.api.shared_kernel.domain.CreatedDocument;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.shared_kernel.domain.Documentable;
@@ -10,6 +11,7 @@ import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
 import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.user.domain.enums.DocumentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,33 @@ public class UserDocumentLastOpenedCommandUseCaseImpl implements UserDocumentLas
                     .title(document.getTitle())
                     .workspaceId(document.getWorkspaceId())
                     .thumbnailKeyName(document.getThumbnailKeyName())
+                    .build();
+
+            recordsToSave.add(newRecord);
+        }
+
+        if (!recordsToSave.isEmpty()) {
+            userDocumentLastOpenedPort.saveAll(recordsToSave);
+        }
+    }
+
+    @Override
+    public void createInitialRecordsForWorkspaceUsers(List<User> usersInWorkspace, CreatedDocument createdDocument, Long workspaceId, DocumentType documentType) {
+
+        List<UserDocumentLastOpened> recordsToSave = new ArrayList<>();
+
+        for (User user : usersInWorkspace) {
+            UserDocumentId documentId = new UserDocumentId(
+                    user.getId(),
+                    createdDocument.getId(),
+                    documentType
+            );
+
+            UserDocumentLastOpened newRecord = UserDocumentLastOpened.builder()
+                    .id(documentId)
+                    .user(user)
+                    .title(createdDocument.getTitle())
+                    .workspaceId(workspaceId)
                     .build();
 
             recordsToSave.add(newRecord);
