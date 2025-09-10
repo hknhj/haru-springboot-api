@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -347,6 +348,25 @@ class MeetingQueryUseCaseImplTest {
         assertThat(result).hasSize(2);
         assertThat(result).isEqualTo(meetings);
         verify(meetingPort, times(1)).findAllByWorkspaceId(workspace.getId());
+    }
+
+    @Test
+    @DisplayName("캘린더용 특정 기간의 회의 목록 조회 성공")
+    void getAllMeetingsForCalendar_Success() {
+
+        // given
+        LocalDateTime startDate = LocalDateTime.of(2025, 9, 1, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2025, 9, 30, 23, 59);
+
+        given(meetingPort.findAllForCalendars(workspace.getId(), startDate, endDate)).willReturn(meetings);
+
+        // when
+        List<Meeting> result = meetingQueryUseCase.getAllMeetingsForCalendar(workspace.getId(), startDate, endDate);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).isEqualTo(meetings);
+        verify(meetingPort, times(1)).findAllForCalendars(workspace.getId(), startDate, endDate);
     }
 
 }
