@@ -1,9 +1,7 @@
 package com.haru.api.global.documentFinder;
 
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.user.domain.enums.DocumentType;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +9,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MeetingFinder implements DocumentFinder{
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingQueryUseCase meetingQueryUseCase;
 
     @Override
     public DocumentType getSupportType() {
@@ -20,7 +18,6 @@ public class MeetingFinder implements DocumentFinder{
 
     @Override
     public Object findById(Object id) {
-        return meetingRepository.findById((Long)id)
-                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+        return meetingQueryUseCase.getMeeting((Long)id);
     }
 }

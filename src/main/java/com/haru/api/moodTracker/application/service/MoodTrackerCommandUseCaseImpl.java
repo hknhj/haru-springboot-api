@@ -18,7 +18,7 @@ import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
-import com.haru.api.global.annotation.UpdateDocumentTitle;
+import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.global.util.HashIdUtil;
@@ -111,7 +111,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
      */
     @Override
     @Transactional
-    @UpdateDocumentTitle
+    @UpdateDocument
     public void updateTitle(
             User user,
             MoodTracker moodTracker,

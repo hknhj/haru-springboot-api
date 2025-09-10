@@ -21,7 +21,7 @@ import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
-import com.haru.api.global.annotation.UpdateDocumentTitle;
+import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
@@ -224,7 +224,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
   
     @Override
     @Transactional
-    @UpdateDocumentTitle
+    @UpdateDocument
     public void updateSnsEventTitle(
             User user,
             SnsEvent snsEvent,

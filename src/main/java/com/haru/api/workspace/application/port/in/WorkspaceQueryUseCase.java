@@ -55,4 +55,12 @@ public interface WorkspaceQueryUseCase {
      * @return
      */
     WorkspaceResponseDTO.RecentDocumentList getDocumentsForMainPage(User user, Workspace workspace);
+
+    /**
+     * 워크스페이스 조회 메서드
+     *
+     * @param workspaceId
+     * @return
+     */
+    Workspace getWorkspace(Long workspaceId);
 }

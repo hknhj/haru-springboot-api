@@ -16,9 +16,6 @@ public class MeetingRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class createMeetingRequest{
-        @Schema(type = "string")
-        @JsonDeserialize(using = ToLongDeserializer.class)
-        private Long workspaceId;
         private String title;
     }
     @Getter

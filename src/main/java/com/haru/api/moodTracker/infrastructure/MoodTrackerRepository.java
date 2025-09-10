@@ -29,7 +29,7 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
     @Query("SELECT mt FROM MoodTracker mt " +
             "WHERE mt.workspace.id = :workspaceId " +
             "AND mt.createdAt BETWEEN :startDate AND :endDate")
-    List<MoodTracker> findAllDocumentForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
+    List<MoodTracker> findAllForCalendars(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("SELECT mt FROM MoodTracker mt " +
             "WHERE mt.id = :moodTrackerId AND EXISTS (" +

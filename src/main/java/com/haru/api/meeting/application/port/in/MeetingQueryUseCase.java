@@ -6,7 +6,9 @@ import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface MeetingQueryUseCase {
 
@@ -19,4 +21,12 @@ public interface MeetingQueryUseCase {
     MeetingResponseDTO.proceedingDownLoadLinkResponse downloadMeeting(User user, Meeting meeting, Format format);
 
     MeetingResponseDTO.proceedingVoiceLinkResponse getMeetingVoiceFile(User user, Meeting meeting);
+
+    List<Meeting> getAllMeetingsInWorkspace(Long workspaceId);
+
+    List<Meeting> getAllMeetingsForCalendar(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate);
+
+    Optional<Meeting> getDocumentWithPermissionCheck(Long userId, Long meetingId);
+
+    Meeting getMeeting(Long meetingId);
 }

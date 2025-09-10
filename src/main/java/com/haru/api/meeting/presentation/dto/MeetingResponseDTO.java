@@ -2,6 +2,7 @@ package com.haru.api.meeting.presentation.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.haru.api.shared_kernel.domain.CreatedDocument;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,10 +19,15 @@ import java.util.stream.Collectors;
 public class MeetingResponseDTO {
     @Getter
     @Builder
-    public static class createMeetingResponse{
+    public static class createMeetingResponse implements CreatedDocument {
         @JsonSerialize(using = ToStringSerializer.class)
         private Long meetingId;
         private String title;
+
+        @Override
+        public Long getId() {
+            return this.meetingId;
+        }
     }
 
     @Getter

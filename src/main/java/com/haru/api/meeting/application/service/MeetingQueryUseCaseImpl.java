@@ -2,9 +2,9 @@ package com.haru.api.meeting.application.service;
 
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
+import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
@@ -18,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,14 +28,14 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MeetingQueryUseCaseImpl implements MeetingQueryUseCase {
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingPort meetingPort;
     private final AmazonS3Manager amazonS3Manager;
     private final SpeechSegmentRepository speechSegmentRepository;
 
     @Override
     public List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Workspace workspace) {
 
-        List<Meeting> foundMeetings = meetingRepository.findByWorkspaceOrderByUpdatedAtDesc(workspace);
+        List<Meeting> foundMeetings = meetingPort.findAllByWorkspaceIdOrderByUpdatedAtDesc(workspace.getId());
 
         return foundMeetings.stream()
                 .map(eachMeeting -> MeetingConverter.toGetMeetingResponse(eachMeeting, user.getId()))
@@ -104,6 +106,27 @@ public class MeetingQueryUseCaseImpl implements MeetingQueryUseCase {
         return MeetingResponseDTO.proceedingVoiceLinkResponse.builder()
                 .voiceLink(presignedUrl)
                 .build();
+    }
+
+    @Override
+    public List<Meeting> getAllMeetingsInWorkspace(Long workspaceId) {
+        return meetingPort.findAllByWorkspaceId(workspaceId);
+    }
+
+    @Override
+    public List<Meeting> getAllMeetingsForCalendar(Long workspaceId, LocalDateTime startDate, LocalDateTime endDate) {
+        return meetingPort.findAllForCalendars(workspaceId, startDate, endDate);
+    }
+
+    @Override
+    public Optional<Meeting> getDocumentWithPermissionCheck(Long userId, Long meetingId) {
+        return meetingPort.findByIdIfUserHasAccess(userId, meetingId);
+    }
+
+    @Override
+    public Meeting getMeeting(Long meetingId) {
+        return meetingPort.findById(meetingId)
+                .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
     }
 
 }

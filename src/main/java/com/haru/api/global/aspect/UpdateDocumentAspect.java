@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class UpdateDocumentTitleAspect {
+public class UpdateDocumentAspect {
 
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
 
-    @AfterReturning("@annotation(com.haru.api.global.annotation.UpdateDocumentTitle)")
-    public void afterTitleUpdate(JoinPoint joinPoint) {
+    @AfterReturning("@annotation(com.haru.api.global.annotation.UpdateDocument)")
+    public void afterUpdateDocument(JoinPoint joinPoint) {
 
         Documentable document = null;
         DocumentModifier documentModifier = null;
