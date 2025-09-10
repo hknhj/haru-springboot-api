@@ -1,10 +1,10 @@
 package com.haru.api.meeting.application.service;
 
+import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.application.port.FileExtractorService;
 import com.haru.api.infra.api.client.ChatGPTClient;
-import com.haru.api.infra.s3.AmazonS3Manager;
+import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.haru.api.meeting.application.converter.MeetingConverter;
-import com.haru.api.meeting.application.port.out.AudioUploadPort;
 import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -37,15 +38,13 @@ class MeetingCommandUseCaseImplTest {
     private MeetingCommandUseCaseImpl meetingCommandUseCase;
 
     @Mock
-    private AmazonS3Manager amazonS3Manager;
-    @Mock
     private MeetingPort meetingPort;
     @Mock
     private ChatGPTClient chatGPTClient;
     @Mock
     private FileExtractorService fileExtractorService;
     @Mock
-    private AudioUploadPort audioUploadPort;
+    private MarkdownFileUploader markdownFileUploader;
 
     private User user;
     private Workspace workspace;
@@ -114,11 +113,65 @@ class MeetingCommandUseCaseImplTest {
             assertThat(capturedMeeting.getCreator()).isEqualTo(user);
             assertThat(capturedMeeting.getWorkspace()).isEqualTo(workspace);
 
-            // 다른 Mock 객체들도 올바르게 호출되었는지 검증
             verify(fileExtractorService, times(1)).extractTextFromFile(agendaFile);
             verify(chatGPTClient, times(1)).summarizeDocument(extractedText);
             mockedConverter.verify(() -> MeetingConverter.toCreateMeetingResponse(meeting), times(1));
         }
+    }
+
+    @Test
+    @DisplayName("회의 제목 변경 성공")
+    void updateMeetingTitle_Success() {
+
+        // given
+        String newTitle = "변경된 회의 제목";
+        Meeting meeting = mock(Meeting.class);
+        MeetingRequestDTO.updateTitle request = MeetingRequestDTO.updateTitle.builder()
+                .title(newTitle)
+                .build();
+
+        String pdfKey = "meeting/proceeding.pdf";
+        String wordKey = "meeting/proceeding.docx";
+
+        given(meeting.getCreator()).willReturn(user);
+        given(meeting.getProceedingPdfKeyName()).willReturn(pdfKey);
+        given(meeting.getProceedingWordKeyName()).willReturn(wordKey);
+
+        // when
+        meetingCommandUseCase.updateMeetingTitle(user, meeting, request);
+
+        // then
+        verify(meeting, times(1)).updateTitle(newTitle);
+        verify(markdownFileUploader, times(1)).updateFileTitle(pdfKey, newTitle + ".pdf");
+        verify(markdownFileUploader, times(1)).updateFileTitle(wordKey, newTitle + ".docx");
+        verify(meetingPort, times(1)).save(meeting);
+    }
+
+    @Test
+    @DisplayName("회의 생성자가 아닌 경우 제목 변경 시 권한 없음 예외 발생")
+    void updateMeetingTitle_NoAuthority_ThrowsException() {
+        // given
+        User otherUser = User.builder()
+                .id(2L)
+                .name("otherUser")
+                .build();
+        Meeting meeting = mock(Meeting.class);
+
+        String newTitle = "변경된 회의 제목";
+        MeetingRequestDTO.updateTitle request = MeetingRequestDTO.updateTitle.builder()
+                        .title(newTitle)
+                        .build();
+
+        given(meeting.getCreator()).willReturn(user);
+
+        // when & then
+        assertThatThrownBy(() -> meetingCommandUseCase.updateMeetingTitle(otherUser, meeting, request))
+                .isInstanceOf(MemberHandler.class)
+                .hasMessageContaining("수정 및 삭제할 권한이 없습니다.");
+
+        verify(meeting, never()).updateTitle(anyString());
+        verifyNoInteractions(markdownFileUploader);
+        verifyNoInteractions(meetingPort);
     }
 
 }
