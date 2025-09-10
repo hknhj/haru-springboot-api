@@ -1,7 +1,9 @@
 package com.haru.api.meeting.application.service;
 
 import com.haru.api.global.annotation.CreateDocument;
+import com.haru.api.global.application.port.FileExtractorService;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
+import com.haru.api.meeting.application.port.out.AudioUploadPort;
 import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
@@ -10,7 +12,6 @@ import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.user.domain.User;
-import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
@@ -22,17 +23,11 @@ import com.haru.api.global.apiPayload.exception.handler.*;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
-import com.haru.api.infra.mp3encoder.Mp3EncoderService;
-import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.haru.api.infra.websocket.AudioSessionBuffer;
 import com.haru.api.infra.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.docx4j.TextUtils;
-import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,16 +47,16 @@ import static com.haru.api.user.domain.enums.DocumentType.AI_MEETING_MANAGER;
 public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
     private final MeetingPort meetingPort;
+    private final AudioUploadPort audioUploadPort;
 
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
     private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
-    private final AmazonS3Manager amazonS3Manager;
-    private final Mp3EncoderService encoderService;
     private final ChatGPTClient chatGPTClient;
     private final WebSocketSessionRegistry webSocketSessionRegistry;
     private final SpeechSegmentRepository speechSegmentRepository;
     private final MarkdownFileUploader markdownFileUploader;
+    private final FileExtractorService fileExtractorService;
 
     @Override
     @Transactional
@@ -73,9 +68,8 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
             MeetingRequestDTO.createMeetingRequest request)
     {
 
-        String extractedText = extractTextFromFile(agendaFile);
+        String extractedText = fileExtractorService.extractTextFromFile(agendaFile);
 
-        // agendaFile을 openAi 활용하여 요약
         String agendaSummary = chatGPTClient.summarizeDocument(extractedText)
                 .block();
 
@@ -90,8 +84,6 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
     }
-
-
 
     @Override
     @Transactional
@@ -202,7 +194,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
         if (audioBuffer != null && audioBuffer.size() > 0) {
             // 파일 업로드 후, key name을 반환
-            String keyName = uploadAudioFile(audioBuffer);
+            String keyName = audioUploadPort.uploadAudioFile(audioBuffer);
 
             // audio file key name 엔티티에 저장
             currentMeeting.setAudioFileKey(keyName);
@@ -269,63 +261,4 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         return meetingPort.save(meeting);
     }
 
-    /**
-     * MultipartFile을 받아 파일 형식에 따라 텍스트를 추출합니다.
-     */
-    private String extractTextFromFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return "";
-        }
-
-        String filename = file.getOriginalFilename();
-        try (InputStream inputStream = file.getInputStream()) {
-            if (filename != null && filename.toLowerCase().endsWith(".pdf")) {
-                // PDF에서 텍스트 추출
-                try (PDDocument document = PDDocument.load(inputStream)) {
-                    PDFTextStripper stripper = new PDFTextStripper();
-                    return stripper.getText(document);
-                }
-            } else if (filename != null && filename.toLowerCase().endsWith(".docx")) {
-                // DOCX에서 텍스트 추출
-                WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(inputStream);
-                // StringWriter를 사용하여 문서의 모든 텍스트 파트를 더 안정적으로 추출합니다.
-                StringWriter stringWriter = new StringWriter();
-                TextUtils.extractText(wordMLPackage.getMainDocumentPart(), stringWriter);
-                return stringWriter.toString();
-            } else {
-                log.warn("지원하지 않는 파일 형식입니다: {}", filename);
-                return "";
-            }
-        } catch (Exception e) {
-            throw new MeetingHandler(ErrorStatus.MEETING_FILE_UPLOAD_FAIL);
-        }
-    }
-
-    /**
-     *
-     * @param audioBuffer : 현재 처리하는 세션의 전체 원본 음성 데이터
-     *
-     * 전체 회의 음성 파일을 s3에 업로드하고, audio file key name을 저장합니다.
-     */
-    private String uploadAudioFile(ByteArrayOutputStream audioBuffer) {
-
-        try {
-            byte[] rawAudioData = audioBuffer.toByteArray();
-
-            int channels = 1;
-            int samplingRate = 16000;
-            int bitRate = 128000;
-            byte[] mp3Data = encoderService.encodePcmToMp3(rawAudioData, channels, samplingRate, bitRate);
-            log.info("MP3 인코딩 완료. 인코딩된 크기: {} bytes", mp3Data.length);
-
-            String keyName = amazonS3Manager.generateKeyName("meeting/recording") + ".mp3";
-            amazonS3Manager.uploadFile(keyName, mp3Data, "audio/mpeg");
-            log.info("S3 업로드 성공. Key: {}", keyName);
-
-            return keyName;
-
-        } catch (Exception e) {
-            throw new MeetingHandler(ErrorStatus.MEETING_AUDIO_FILE_UPLOAD_FAIL);
-        }
-    }
 }
