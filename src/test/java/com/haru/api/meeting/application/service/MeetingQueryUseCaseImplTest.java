@@ -332,4 +332,21 @@ class MeetingQueryUseCaseImplTest {
 
         verify(amazonS3Manager,never()).generatePresignedUrl(anyString());
     }
+
+    @Test
+    @DisplayName("워크스페이스의 모든 회의 목록 조회 성공")
+    void getAllMeetingsInWorkspace_Success() {
+
+        // given
+        given(meetingPort.findAllByWorkspaceId(workspace.getId())).willReturn(meetings);
+
+        // when
+        List<Meeting> result = meetingQueryUseCase.getAllMeetingsInWorkspace(workspace.getId());
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).isEqualTo(meetings);
+        verify(meetingPort, times(1)).findAllByWorkspaceId(workspace.getId());
+    }
+
 }
