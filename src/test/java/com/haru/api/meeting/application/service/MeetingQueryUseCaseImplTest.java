@@ -369,4 +369,37 @@ class MeetingQueryUseCaseImplTest {
         verify(meetingPort, times(1)).findAllForCalendars(workspace.getId(), startDate, endDate);
     }
 
+    @Test
+    @DisplayName("권한이 있는 회의 단건 조회 성공")
+    void getDocumentWithPermissionCheck_Success() {
+        // given
+        Long userId = 1L;
+        Long meetingId = 101L;
+        Meeting meetingWithPermission = mock(Meeting.class);
+        given(meetingPort.findByIdIfUserHasAccess(userId, meetingId)).willReturn(Optional.of(meetingWithPermission));
+
+        // when
+        Optional<Meeting> result = meetingQueryUseCase.getDocumentWithPermissionCheck(userId, meetingId);
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(meetingWithPermission);
+        verify(meetingPort, times(1)).findByIdIfUserHasAccess(userId, meetingId);
+    }
+
+    @Test
+    @DisplayName("권한이 없는 회의 단건 조회 시 빈 Optional 반환")
+    void getDocumentWithPermissionCheck_NoPermission_ReturnsEmpty() {
+
+        // given
+        given(meetingPort.findByIdIfUserHasAccess(user1.getId(), meeting1.getId())).willReturn(Optional.empty());
+
+        // when
+        Optional<Meeting> result = meetingQueryUseCase.getDocumentWithPermissionCheck(user1.getId(), meeting1.getId());
+
+        // then
+        assertThat(result).isEmpty();
+        verify(meetingPort, times(1)).findByIdIfUserHasAccess(user1.getId(), meeting1.getId());
+    }
+
 }
