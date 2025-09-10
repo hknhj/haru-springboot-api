@@ -1,6 +1,7 @@
 package com.haru.api.infra.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.haru.api.meeting.application.event.MeetingEndedEvent;
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
@@ -12,6 +13,7 @@ import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.orctom.vad4j.VAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
@@ -41,6 +43,8 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final MeetingCommandUseCase meetingCommandUseCase;
     private final SpeechSegmentRepository speechSegmentRepository;
     private final AIQuestionRepository aiQuestionRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     private final ObjectMapper objectMapper;
 
@@ -81,7 +85,7 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
         String sessionId = session.getId();
 
         // 회의 종료 후, 회의 음성 파일 s3 업로드, AI 회의록 생성
-        meetingCommandUseCase.processAfterMeeting(sessionBuffers.get(sessionId));
+        eventPublisher.publishEvent(new MeetingEndedEvent(this, sessionBuffers.get(sessionId)));
 
         sessionBuffers.remove(sessionId);
         sessionQueues.remove(sessionId);
