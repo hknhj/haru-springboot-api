@@ -3,6 +3,8 @@ package com.haru.api.meeting.application.service;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.application.port.FileExtractorService;
 import com.haru.api.infra.api.client.ChatGPTClient;
+import com.haru.api.infra.api.entity.SpeechSegment;
+import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.infra.s3.MarkdownFileUploader;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.application.port.out.MeetingPort;
@@ -10,7 +12,10 @@ import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.user.domain.User;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
+import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.Workspace;
+import com.haru.api.workspace.domain.enums.Auth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +29,8 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,8 +52,13 @@ class MeetingCommandUseCaseImplTest {
     private FileExtractorService fileExtractorService;
     @Mock
     private MarkdownFileUploader markdownFileUploader;
+    @Mock
+    private UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
+    @Mock
+    private SpeechSegmentRepository speechSegmentRepository;
 
     private User user;
+    private User otherUser;
     private Workspace workspace;
     private Meeting meeting;
 
@@ -55,6 +67,10 @@ class MeetingCommandUseCaseImplTest {
         user = User.builder()
                 .id(1L)
                 .name("testUser")
+                .build();
+        otherUser = User.builder()
+                .id(2L)
+                .name("otherUser")
                 .build();
 
         workspace = Workspace.builder()
@@ -151,10 +167,6 @@ class MeetingCommandUseCaseImplTest {
     @DisplayName("회의 생성자가 아닌 경우 제목 변경 시 권한 없음 예외 발생")
     void updateMeetingTitle_NoAuthority_ThrowsException() {
         // given
-        User otherUser = User.builder()
-                .id(2L)
-                .name("otherUser")
-                .build();
         Meeting meeting = mock(Meeting.class);
 
         String newTitle = "변경된 회의 제목";
@@ -172,6 +184,72 @@ class MeetingCommandUseCaseImplTest {
         verify(meeting, never()).updateTitle(anyString());
         verifyNoInteractions(markdownFileUploader);
         verifyNoInteractions(meetingPort);
+    }
+
+    @Test
+    @DisplayName("회의 삭제 성공 - 요청자가 생성자일 경우")
+    void deleteMeeting_Success_ByCreator() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        UserWorkspace userWorkspace = UserWorkspace.builder()
+                .user(user)
+                .workspace(workspace)
+                .auth(Auth.ADMIN)
+                .build();
+
+        given(meeting.getId()).willReturn(101L);
+        given(meeting.getCreator()).willReturn(user);
+        given(meeting.getWorkspace()).willReturn(workspace);
+        given(meetingPort.findById(meeting.getId())).willReturn(Optional.of(meeting));
+        given(userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), workspace.getId()))
+                .willReturn(Optional.of(userWorkspace));
+
+        SpeechSegment segment = SpeechSegment.builder()
+                .id(1L)
+                .meeting(meeting)
+                .speakerId("user1")
+                .text("첫 번째 발언입니다.")
+                .build();
+        List<SpeechSegment> segments = List.of(segment);
+        given(speechSegmentRepository.findByMeeting(meeting)).willReturn(segments);
+
+        // when
+        meetingCommandUseCase.deleteMeeting(user, meeting);
+
+        // then
+        verify(markdownFileUploader, times(4)).deleteS3File(any());
+        verify(speechSegmentRepository, times(1)).deleteAll(segments);
+        verify(meetingPort, times(1)).delete(meeting);
+    }
+
+    @Test
+    @DisplayName("회의 삭제 실패 - 권한 없는 사용자")
+    void deleteMeeting_NoAuthority_ThrowsException() {
+        // given
+        Meeting meeting = mock(Meeting.class);
+        UserWorkspace otherUserWorkspace = UserWorkspace.builder()
+                .user(otherUser)
+                .workspace(workspace)
+                .auth(Auth.MEMBER)
+                .build();
+
+        given(meeting.getId()).willReturn(101L);
+        given(meeting.getCreator()).willReturn(user);
+        given(meeting.getWorkspace()).willReturn(workspace);
+        given(meetingPort.findById(meeting.getId())).willReturn(Optional.of(meeting));
+        given(userWorkspaceQueryUseCase.getUserWorkspace(otherUser.getId(), workspace.getId()))
+                .willReturn(Optional.of(otherUserWorkspace));
+
+        // when & then
+        assertThatThrownBy(() -> meetingCommandUseCase.deleteMeeting(otherUser, meeting))
+                .isInstanceOf(MemberHandler.class)
+                .hasMessageContaining("수정 및 삭제할 권한이 없습니다.");
+
+        // 예외 발생 시, 어떤 삭제 로직도 호출되면 안됨
+        verifyNoInteractions(markdownFileUploader);
+        verify(speechSegmentRepository, never()).deleteAll(any());
+        verify(meetingPort, never()).delete(any());
     }
 
 }
