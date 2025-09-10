@@ -1,17 +1,23 @@
 package com.haru.api.meeting.application.service;
 
+import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.entity.SpeechSegment;
 import com.haru.api.infra.api.repository.SpeechSegmentRepository;
+import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -34,6 +40,8 @@ class MeetingQueryUseCaseImplTest {
     private MeetingPort meetingPort;
     @Mock
     private SpeechSegmentRepository speechSegmentRepository;
+    @Mock
+    private AmazonS3Manager amazonS3Manager;
 
     private User user1;
     private User user2;
@@ -220,5 +228,73 @@ class MeetingQueryUseCaseImplTest {
 
         // repository가 정확히 1번 호출되었는지 검증
         verify(speechSegmentRepository, times(1)).findAllByMeetingIdWithAIQuestions(meeting1.getId());
+    }
+
+    @Test
+    @DisplayName("PDF 파일 다운로드 링크 생성 성공")
+    void downloadMeeting_forPdf_Success() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        String pdfKey = "proceedings/meeting-1.pdf";
+        String expectedUrl = "https://s3.presigned.url/for/pdf";
+        Format format = Format.PDF;
+
+        given(meeting.getProceedingPdfKeyName()).willReturn(pdfKey);
+        given(amazonS3Manager.generatePresignedUrl(pdfKey)).willReturn(expectedUrl);
+
+        // when
+        MeetingResponseDTO.proceedingDownLoadLinkResponse result = meetingQueryUseCase.downloadMeeting(user1, meeting, format);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getDownloadLink()).isEqualTo(expectedUrl);
+
+        // Mock 객체 호출 검증
+        verify(meeting, times(1)).getProceedingPdfKeyName();
+        verify(meeting, never()).getProceedingWordKeyName();
+        verify(amazonS3Manager, times(1)).generatePresignedUrl(pdfKey);
+    }
+
+    @Test
+    @DisplayName("DOCX 파일 다운로드 링크 생성 성공")
+    void downloadMeeting_forDocx_Success() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        String wordKey = "proceedings/meeting-1.docx";
+        String expectedUrl = "https://s3.presigned.url/for/docx";
+        Format format = Format.DOCX;
+
+        given(meeting.getProceedingWordKeyName()).willReturn(wordKey);
+        given(amazonS3Manager.generatePresignedUrl(wordKey)).willReturn(expectedUrl);
+
+        // when
+        MeetingResponseDTO.proceedingDownLoadLinkResponse result = meetingQueryUseCase.downloadMeeting(user1, meeting, format);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getDownloadLink()).isEqualTo(expectedUrl);
+
+        verify(meeting, times(1)).getProceedingWordKeyName();
+        verify(meeting, never()).getProceedingPdfKeyName();
+        verify(amazonS3Manager, times(1)).generatePresignedUrl(wordKey);
+    }
+
+    @Test
+    @DisplayName("파일 키가 존재하지 않거나 비어있을 경우 예외 발생")
+    void downloadMeeting_KeyNotFoundOrBlank_ThrowsException() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        Format format = mock(Format.class);
+        when(meeting.getProceedingPdfKeyName()).thenReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> meetingQueryUseCase.downloadMeeting(user1, meeting, format))
+                .isInstanceOf(MeetingHandler.class)
+                .hasMessageContaining("AI회의록이 없습니다");
+
+        verify(amazonS3Manager, never()).generatePresignedUrl(anyString());
     }
 }
