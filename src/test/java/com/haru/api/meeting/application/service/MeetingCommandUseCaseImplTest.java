@@ -11,7 +11,9 @@ import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.User;
+import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.Workspace;
@@ -56,6 +58,8 @@ class MeetingCommandUseCaseImplTest {
     private UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
     @Mock
     private SpeechSegmentRepository speechSegmentRepository;
+    @Mock
+    private UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     private User user;
     private User otherUser;
@@ -250,6 +254,83 @@ class MeetingCommandUseCaseImplTest {
         verifyNoInteractions(markdownFileUploader);
         verify(speechSegmentRepository, never()).deleteAll(any());
         verify(meetingPort, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("회의록 수정 성공 - 요청자가 생성자일 경우")
+    void adjustProceeding_Success_ByCreator() {
+
+        // given
+        Meeting foundMeeting = mock(Meeting.class);
+        String newProceedingText = "이것은 수정된 회의록입니다.";
+        MeetingRequestDTO.meetingProceedingRequest request = MeetingRequestDTO.meetingProceedingRequest.builder()
+                .proceeding(newProceedingText)
+                .build();
+
+        UserWorkspace userWorkspace = UserWorkspace.builder()
+                .user(user)
+                .workspace(workspace)
+                .auth(Auth.ADMIN)
+                .build();
+
+        UserDocumentLastOpened lastOpened = mock(UserDocumentLastOpened.class);
+        List<UserDocumentLastOpened> lastOpenedList = List.of(lastOpened);
+        String newThumbnailKey = "new/thumbnail.jpg";
+
+        given(meetingPort.findById(user.getId())).willReturn(Optional.of(foundMeeting));
+        given(foundMeeting.getWorkspace()).willReturn(workspace);
+        given(foundMeeting.getCreator()).willReturn(user);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), workspace.getId()))
+                .willReturn(Optional.of(userWorkspace));
+
+        // 파일 업로드 관련 Mocking
+        given(markdownFileUploader.createOrUpdatePdf(anyString(), anyString(), any(), anyString())).willReturn("new/pdf.key");
+        given(markdownFileUploader.createOrUpdateWord(anyString(), anyString(), any(), anyString())).willReturn("new/word.key");
+        given(markdownFileUploader.createOrUpdateThumbnail(anyString(), anyString(), any())).willReturn(newThumbnailKey);
+        given(userDocumentLastOpenedQueryUseCase.getDocumentAccessHistory(any(), any())).willReturn(lastOpenedList);
+
+        // when
+        meetingCommandUseCase.adjustProceeding(user, meeting, request);
+
+        // then
+        verify(foundMeeting, times(1)).updateProceeding(newProceedingText);
+        verify(markdownFileUploader, times(1)).createOrUpdatePdf(anyString(), anyString(), any(), anyString());
+        verify(markdownFileUploader, times(1)).createOrUpdateWord(anyString(), anyString(), any(), anyString());
+        verify(markdownFileUploader, times(1)).createOrUpdateThumbnail(anyString(), anyString(), any());
+        verify(lastOpened, times(1)).updateThumbnailKeyName(newThumbnailKey);
+    }
+
+    @Test
+    @DisplayName("회의록 수정 실패 - 권한 없는 사용자")
+    void adjustProceeding_NoAuthority_ThrowsException() {
+
+        // given
+        Meeting foundMeeting = mock(Meeting.class);
+        MeetingRequestDTO.meetingProceedingRequest request = MeetingRequestDTO.meetingProceedingRequest.builder()
+                .proceeding("some text")
+                .build();
+
+        UserWorkspace otherUserWorkspace = UserWorkspace.builder()
+                .user(otherUser)
+                .workspace(workspace)
+                .auth(Auth.MEMBER)
+                .build();
+
+        given(meetingPort.findById(meeting.getId())).willReturn(Optional.of(foundMeeting));
+        given(foundMeeting.getWorkspace()).willReturn(workspace);
+        given(foundMeeting.getCreator()).willReturn(user);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(otherUser.getId(), workspace.getId()))
+                .willReturn(Optional.of(otherUserWorkspace));
+
+        // when & then
+        assertThatThrownBy(() -> meetingCommandUseCase.adjustProceeding(otherUser, meeting, request))
+                .isInstanceOf(MemberHandler.class)
+                .hasMessageContaining("수정 및 삭제할 권한이 없습니다.");
+
+        // 예외 발생 시, 회의록 내용이나 파일 관련 메서드는 호출되지 않아야 함
+        verify(foundMeeting, never()).updateProceeding(anyString());
+        verifyNoInteractions(markdownFileUploader);
+        verifyNoInteractions(userDocumentLastOpenedQueryUseCase);
     }
 
 }
