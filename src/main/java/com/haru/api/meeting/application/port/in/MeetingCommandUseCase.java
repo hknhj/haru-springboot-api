@@ -18,10 +18,6 @@ public interface MeetingCommandUseCase {
 
     void adjustProceeding(User user, Meeting meeting, MeetingRequestDTO.meetingProceedingRequest newProceeding);
 
-    void endMeeting(User user, Meeting meeting);
-
-    void processAfterMeeting(AudioSessionBuffer audioSessionBuffer);
-
     Meeting save(Meeting meeting);
 
 }

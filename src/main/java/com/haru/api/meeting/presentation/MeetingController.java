@@ -1,5 +1,6 @@
 package com.haru.api.meeting.presentation;
 
+import com.haru.api.meeting.application.port.in.EndMeetingUseCase;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
@@ -32,7 +33,7 @@ public class MeetingController {
 
     private final MeetingCommandUseCase meetingCommandUseCase;
     private final MeetingQueryUseCase meetingQueryUseCase;
-
+    private final EndMeetingUseCase endMeetingUseCase;
 
     @Operation(summary = "회의 생성 API", description = "# [v1.1 (2025-08-05)](https://www.notion.so/2265da7802c580e8bf25c99cc81998bb)" +" 안건지 파일과 회의 정보를 받아 회의를 생성합니다. accesstoken을 header에 입력해주세요",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -161,7 +162,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthMeeting Meeting meeting
     ) {
 
-        meetingCommandUseCase.endMeeting(user, meeting);
+        endMeetingUseCase.endMeeting(user, meeting);
 
         return ApiResponse.onSuccess("회의가 종료되었습니다");
 
