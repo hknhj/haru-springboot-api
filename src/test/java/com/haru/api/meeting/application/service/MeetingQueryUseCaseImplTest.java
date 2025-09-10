@@ -1,5 +1,7 @@
 package com.haru.api.meeting.application.service;
 
+import com.haru.api.infra.api.entity.SpeechSegment;
+import com.haru.api.infra.api.repository.SpeechSegmentRepository;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.application.port.out.MeetingPort;
 import com.haru.api.meeting.domain.Meeting;
@@ -15,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +32,8 @@ class MeetingQueryUseCaseImplTest {
 
     @Mock
     private MeetingPort meetingPort;
+    @Mock
+    private SpeechSegmentRepository speechSegmentRepository;
 
     private User user1;
     private User user2;
@@ -59,12 +64,14 @@ class MeetingQueryUseCaseImplTest {
                 .title("회의1")
                 .workspace(workspace)
                 .creator(user1)
+                .startTime(LocalDateTime.of(2025, 9, 9, 14, 0))
                 .build();
         meeting2 = Meeting.builder()
                 .id(2L)
                 .title("회의2")
                 .workspace(workspace)
                 .creator(user2)
+                .startTime(LocalDateTime.of(2025, 9, 10, 14, 0))
                 .build();
         meetings = List.of(meeting1, meeting2);
     }
@@ -96,7 +103,7 @@ class MeetingQueryUseCaseImplTest {
             mockedConverter.when(() -> MeetingConverter.toGetMeetingResponse(meeting2, user1.getId())).thenReturn(response2);
 
             // when
-            List<MeetingResponseDTO.getMeetingResponse> result = meetingQueryUseCase.getMeetings(user1, workspace);
+            List<MeetingResponseDTO.getMeetingResponse> result = meetingQueryUseCase.getMeetingList(user1, workspace);
 
             // then
             assertThat(result).isNotNull();
@@ -118,7 +125,7 @@ class MeetingQueryUseCaseImplTest {
         given(meetingPort.findAllByWorkspaceIdOrderByUpdatedAtDesc(workspace.getId())).willReturn(Collections.emptyList());
 
         // when
-        List<MeetingResponseDTO.getMeetingResponse> result = meetingQueryUseCase.getMeetings(user1, workspace);
+        List<MeetingResponseDTO.getMeetingResponse> result = meetingQueryUseCase.getMeetingList(user1, workspace);
 
         // then
         assertThat(result).isNotNull();
@@ -146,10 +153,72 @@ class MeetingQueryUseCaseImplTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result).isEqualTo(expectedResponse); // 반환된 결과가 기대한 DTO와 일치하는지 확인
+            assertThat(result).isEqualTo(expectedResponse);
 
             // Mock 객체들이 예상대로 호출되었는지 검증
             mockedConverter.verify(() -> MeetingConverter.toGetMeetingProceedingResponse(user1, meeting1), times(1));
         }
+    }
+
+    @Test
+    @DisplayName("스크립트 조회 성공")
+    void getTranscript_Success() {
+
+        // given
+        SpeechSegment segment1 = SpeechSegment.builder()
+                .id(1L)
+                .meeting(meeting1)
+                .speakerId("user1")
+                .text("첫 번째 발언입니다.")
+                .build();
+        SpeechSegment segment2 = SpeechSegment.builder()
+                .id(2L)
+                .meeting(meeting1)
+                .speakerId("user2")
+                .text("두 번째 발언입니다.")
+                .build();
+        List<SpeechSegment> segments = List.of(segment1, segment2);
+
+        given(speechSegmentRepository.findAllByMeetingIdWithAIQuestions(meeting1.getId())).willReturn(segments);
+
+        // when
+        MeetingResponseDTO.TranscriptResponse result = meetingQueryUseCase.getTranscript(user1, meeting1);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getMeetingStartTime()).isEqualTo(meeting1.getStartTime());
+        assertThat(result.getTranscripts()).hasSize(2);
+
+        // DTO 변환이 잘 되었는지 일부 필드 확인
+        MeetingResponseDTO.Transcript transcript1 = result.getTranscripts().get(0);
+        assertThat(transcript1.getSegmentId()).isEqualTo(segment1.getId());
+        assertThat(transcript1.getText()).isEqualTo(segment1.getText());
+        assertThat(transcript1.getAiQuestions()).isEmpty();
+
+        MeetingResponseDTO.Transcript transcript2 = result.getTranscripts().get(1);
+        assertThat(transcript2.getSegmentId()).isEqualTo(segment2.getId());
+        assertThat(transcript2.getAiQuestions()).isEmpty();
+
+        verify(speechSegmentRepository, times(1)).findAllByMeetingIdWithAIQuestions(meeting1.getId());
+    }
+
+    @Test
+    @DisplayName("스크립트가 없을 경우 빈 리스트 반환")
+    void getTranscript_WhenNoSegments_ReturnsEmptyList() {
+
+        // given
+        given(speechSegmentRepository.findAllByMeetingIdWithAIQuestions(meeting1.getId())).willReturn(Collections.emptyList());
+
+        // when
+        MeetingResponseDTO.TranscriptResponse result = meetingQueryUseCase.getTranscript(user1, meeting1);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getMeetingStartTime()).isEqualTo(meeting1.getStartTime());
+        assertThat(result.getTranscripts()).isNotNull();
+        assertThat(result.getTranscripts()).isEmpty();
+
+        // repository가 정확히 1번 호출되었는지 검증
+        verify(speechSegmentRepository, times(1)).findAllByMeetingIdWithAIQuestions(meeting1.getId());
     }
 }
