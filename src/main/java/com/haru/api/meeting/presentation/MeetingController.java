@@ -80,7 +80,7 @@ public class MeetingController {
             @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
 
-        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryUseCase.getMeetings(user, workspace);
+        List<MeetingResponseDTO.getMeetingResponse> response = meetingQueryUseCase.getMeetingList(user, workspace);
 
         return ApiResponse.onSuccess(response);
     }

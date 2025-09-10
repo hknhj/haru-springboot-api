@@ -33,7 +33,7 @@ public class MeetingQueryUseCaseImpl implements MeetingQueryUseCase {
     private final SpeechSegmentRepository speechSegmentRepository;
 
     @Override
-    public List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Workspace workspace) {
+    public List<MeetingResponseDTO.getMeetingResponse> getMeetingList(User user, Workspace workspace) {
 
         List<Meeting> foundMeetings = meetingPort.findAllByWorkspaceIdOrderByUpdatedAtDesc(workspace.getId());
 
@@ -54,7 +54,6 @@ public class MeetingQueryUseCaseImpl implements MeetingQueryUseCase {
     @Override
     public MeetingResponseDTO.TranscriptResponse getTranscript(User user, Meeting meeting) {
 
-        // Repository를 통해 SpeechSegment와 연관된 AIQuestion을 함께 조회 (N+1 문제 해결)
         List<SpeechSegment> segments = speechSegmentRepository.findAllByMeetingIdWithAIQuestions(meeting.getId());
 
         List<MeetingResponseDTO.Transcript> transcriptList = segments.stream()

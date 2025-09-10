@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface MeetingQueryUseCase {
 
-    List<MeetingResponseDTO.getMeetingResponse> getMeetings(User user, Workspace workspace);
+    List<MeetingResponseDTO.getMeetingResponse> getMeetingList(User user, Workspace workspace);
 
     MeetingResponseDTO.getMeetingProceeding getMeetingProceeding(User user, Meeting meeting);
 
