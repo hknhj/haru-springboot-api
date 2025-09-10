@@ -9,8 +9,6 @@ import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
-import com.haru.api.meeting.domain.Keyword;
-import com.haru.api.meeting.infrastructure.jpa.KeywordJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
@@ -53,7 +51,6 @@ import static com.haru.api.user.domain.enums.DocumentType.AI_MEETING_MANAGER;
 public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
     private final MeetingPort meetingPort;
-    private final KeywordJpaRepository keywordJpaRepository;
 
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
@@ -78,21 +75,8 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         String extractedText = extractTextFromFile(agendaFile);
 
         // agendaFile을 openAi 활용하여 요약
-        String agendaResult = chatGPTClient.summarizeDocument(extractedText)
+        String agendaSummary = chatGPTClient.summarizeDocument(extractedText)
                 .block();
-
-        String agendaKeywords = "";
-        String agendaSummary = "요약 생성에 실패했습니다.";
-
-        if (agendaResult != null && agendaResult.contains("|||")) {
-            String[] parts = agendaResult.split("\\|\\|\\|");
-            if (parts.length == 2) {
-                agendaKeywords = parts[0].trim();
-                agendaSummary = parts[1].trim();
-            } else {
-                agendaSummary = agendaResult.trim();
-            }
-        }
 
         Meeting newMeeting = Meeting.createInitialMeeting(
                 request.getTitle(),
@@ -100,19 +84,6 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
                 user,
                 workspace
         );
-
-        if (!agendaKeywords.isEmpty()) {
-            String[] keywordsArray = agendaKeywords.split(",");
-            for (String keyword : keywordsArray) {
-                String trimmedKeyword = keyword.trim();
-                if (trimmedKeyword.isEmpty()) continue;
-
-                Keyword tag = keywordJpaRepository.findByName(trimmedKeyword)
-                        .orElseGet(() -> keywordJpaRepository.save(Keyword.builder().name(trimmedKeyword).build()));
-
-                newMeeting.addTag(tag);
-            }
-        }
 
         Meeting savedMeeting = meetingPort.save(newMeeting);
 

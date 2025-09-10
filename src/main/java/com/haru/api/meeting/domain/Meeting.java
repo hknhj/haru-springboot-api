@@ -56,9 +56,6 @@ public class Meeting extends BaseEntity implements Documentable {
     @Column(columnDefinition = "TEXT")
     private String thumbnailKeyName;
 
-    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MeetingKeyword> meetingKeywords = new ArrayList<>();
-
     // 회의 시작 시간
     private LocalDateTime startTime;
 
@@ -88,16 +85,6 @@ public class Meeting extends BaseEntity implements Documentable {
     public void initStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
-
-    // 연관관계 편의 메서드
-    public void addTag(Keyword keyword) {
-        MeetingKeyword meetingKeyword = MeetingKeyword.builder()
-                .meeting(this)
-                .keyword(keyword)
-                .build();
-        this.meetingKeywords.add(meetingKeyword);
-    }
-
 
     @Override
     public Long getWorkspaceId() {

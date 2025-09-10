@@ -201,14 +201,11 @@ public class ChatGPTClient {
             return Mono.just("|||요약할 내용이 없습니다.");
         }
 
-        String prompt = "다음 텍스트는 하나의 연속된 문서입니다. 다음 두 가지 작업을 수행해주세요.\n" +
-                "1. 이 안건지의 핵심 키워드(안건)를 추출해서 콤마(,)로 구분해주세요.\n" +
-                "2. 전체 내용을 255자 이내의 짧은 문단으로 한국어로 요약해주세요.\n" +
-                "반드시 '키워드1,키워드2,키워드3|||요약 내용' 형식으로 응답해주세요. 다른 설명은 붙이지 마세요." +
-                "\n\n--- 문서 내용 ---\n" + documentText;
+        String prompt = "다음 텍스트는 하나의 연속된 문서입니다.\n" +
+                "전체 내용을 한국어로 요약해주세요.\n";
 
         List<Map<String, String>> messages = List.of(
-                Map.of("role", "system", "content", "너는 주어진 안건지의 내용을 분석하여, 정해진 형식에 따라 키워드와 요약문을 반환하는 AI야."),
+                Map.of("role", "system", "content", "너는 주어진 안건지의 내용을 분석하여, 정해진 형식에 따라 요약문을 반환하는 AI야."),
                 Map.of("role", "user", "content", prompt)
         );
 
