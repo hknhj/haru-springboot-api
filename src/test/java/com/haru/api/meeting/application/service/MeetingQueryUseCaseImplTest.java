@@ -15,9 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -296,5 +293,43 @@ class MeetingQueryUseCaseImplTest {
                 .hasMessageContaining("AI회의록이 없습니다");
 
         verify(amazonS3Manager, never()).generatePresignedUrl(anyString());
+    }
+
+    @Test
+    @DisplayName("음성 파일 다운로드 링크 생성 성공")
+    void getMeetingVoiceFile_Success() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        String audioKey = "audios/meeting-1.m4a";
+        String expectedUrl = "https://s3.presigned.url/for/audio";
+        given(meeting.getAudioFileKey()).willReturn(audioKey);
+        given(amazonS3Manager.generatePresignedUrl(audioKey)).willReturn(expectedUrl);
+
+        // when
+        MeetingResponseDTO.proceedingVoiceLinkResponse result = meetingQueryUseCase.getMeetingVoiceFile(user1, meeting);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getVoiceLink()).isEqualTo(expectedUrl);
+        verify(meeting, times(1)).getAudioFileKey();
+        verify(amazonS3Manager, times(1)).generatePresignedUrl(audioKey);
+    }
+
+    @Test
+    @DisplayName("음성 파일 키가 존재하지 않거나 비어있을 경우 예외 발생")
+    void getMeetingVoiceFile_KeyNotFoundOrBlank_ThrowsException() {
+
+        // given
+        Meeting meeting = mock(Meeting.class);
+        String blankKey = "";
+        given(meeting.getAudioFileKey()).willReturn(blankKey);
+
+        // when & then
+        assertThatThrownBy(() -> meetingQueryUseCase.getMeetingVoiceFile(user1, meeting))
+                .isInstanceOf(MeetingHandler.class)
+                .hasMessageContaining("AI회의록이 없습니다");
+
+        verify(amazonS3Manager,never()).generatePresignedUrl(anyString());
     }
 }
