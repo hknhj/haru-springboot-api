@@ -402,4 +402,33 @@ class MeetingQueryUseCaseImplTest {
         verify(meetingPort, times(1)).findByIdIfUserHasAccess(user1.getId(), meeting1.getId());
     }
 
+    @Test
+    @DisplayName("회의 ID로 회의 조회 성공")
+    void getMeeting_Success() {
+        // given
+        given(meetingPort.findById(meeting1.getId())).willReturn(Optional.of(meeting1));
+
+        // when
+        Meeting result = meetingQueryUseCase.getMeeting(meeting1.getId());
+
+        // then
+        assertThat(result).isEqualTo(meeting1);
+        verify(meetingPort, times(1)).findById(meeting1.getId());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 회의 ID로 조회 시 예외 발생")
+    void getMeeting_NotFound_ThrowsException() {
+        // given
+        Long meetingId = 999L;
+        given(meetingPort.findById(meetingId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> meetingQueryUseCase.getMeeting(meetingId))
+                .isInstanceOf(MeetingHandler.class)
+                .hasMessageContaining("회의를 찾을 수 없습니다.");
+
+        verify(meetingPort, times(1)).findById(meetingId);
+    }
+
 }
