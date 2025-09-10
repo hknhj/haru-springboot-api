@@ -1,11 +1,9 @@
 package com.haru.api.infra.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.meeting.domain.Meeting;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
-import com.haru.api.global.apiPayload.exception.handler.MeetingHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.api.client.FastApiClient;
 import com.haru.api.infra.api.client.ScoringApiClient;
@@ -39,13 +37,12 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final ChatGPTClient chatGPTClient;
     private final ScoringApiClient scoringApiClient;
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingQueryUseCase meetingQueryUseCase;
+    private final MeetingCommandUseCase meetingCommandUseCase;
     private final SpeechSegmentRepository speechSegmentRepository;
     private final AIQuestionRepository aiQuestionRepository;
 
     private final ObjectMapper objectMapper;
-
-    private final MeetingCommandUseCase meetingCommandUseCase;
 
     private final Pattern pathPattern = Pattern.compile("^/ws/audio/(\\w+)$");
 
@@ -65,12 +62,11 @@ public class AudioWebSocketHandler extends BinaryWebSocketHandler {
             // meetingId를 활용하여 로직 처리
             log.info("Meeting ID: {}", meetingId);
 
-            Meeting foundMeeting = meetingRepository.findById(meetingId)
-                            .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
+            Meeting foundMeeting = meetingQueryUseCase.getMeeting(meetingId);
 
             // meeting의 회의 시작 시간 기록 및 db에 업데이트
             foundMeeting.initStartTime(LocalDateTime.now());
-            meetingRepository.save(foundMeeting);
+            meetingCommandUseCase.save(foundMeeting);
 
             sessionBuffers.get(session.getId()).setMeeting(foundMeeting);
         } else {

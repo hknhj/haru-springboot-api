@@ -1,5 +1,7 @@
 package com.haru.api.workspace.application.service;
 
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
@@ -10,6 +12,7 @@ import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.converter.WorkspaceConverter;
+import com.haru.api.workspace.application.port.out.WorkspacePort;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.infra.s3.AmazonS3Manager;
@@ -29,6 +32,7 @@ import java.util.*;
 public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
 
     private final UserWorkspacePort userWorkspacePort;
+    private final WorkspacePort workspacePort;
 
     private final DocumentQueryUseCase documentQueryUseCase;
     private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
@@ -101,5 +105,11 @@ public class WorkspaceQueryUseCaseImpl implements WorkspaceQueryUseCase {
                         })
                         .toList()
         );
+    }
+
+    @Override
+    public Workspace getWorkspace(Long workspaceId) {
+        return workspacePort.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
     }
 }

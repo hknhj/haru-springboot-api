@@ -1,6 +1,6 @@
 package com.haru.api.shared_kernel.application.service;
 
-import com.haru.api.meeting.infrastructure.MeetingRepository;
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.shared_kernel.domain.Documentable;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingQueryUseCase meetingQueryUseCase;
     private final SnsEventRepository snsEventRepository;
     private final MoodTrackerRepository moodTrackerRepository;
 
@@ -25,7 +25,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
         List<Documentable> documentList = new ArrayList<>();
 
-        documentList.addAll(meetingRepository.findAllByWorkspaceId(workspaceId));
+        documentList.addAll(meetingQueryUseCase.getAllMeetingsInWorkspace(workspaceId));
         documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspaceId));
         documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspaceId));
 
@@ -37,9 +37,9 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
         List<Documentable> documentList = new ArrayList<>();
 
-        documentList.addAll(meetingRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
-        documentList.addAll(snsEventRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
-        documentList.addAll(moodTrackerRepository.findAllDocumentForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(meetingQueryUseCase.getAllMeetingsForCalendar(workspaceId, startDate, endDate));
+        documentList.addAll(snsEventRepository.findAllForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(moodTrackerRepository.findAllForCalendars(workspaceId, startDate, endDate));
 
         return documentList;
     }

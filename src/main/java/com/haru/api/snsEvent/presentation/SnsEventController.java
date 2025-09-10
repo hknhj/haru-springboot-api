@@ -32,7 +32,7 @@ public class SnsEventController {
             description = " # [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c580c49467fe1b3b5d0766&pm=s)" +
                     " SNS 이벤트 생성 API입니다. Header에 access token을 넣고 Path Variable에는 workspaceId를 Request Body에 SNS 이벤트 정보를 담아 요청해주세요."
     )
-    @PostMapping("/{workspaceId}")
+    @PostMapping("/workspaces/{workspaceId}")
     public ApiResponse<SnsEventResponseDTO.CreateSnsEventResponse> instagramOauthRedirectUri(
             @PathVariable String workspaceId,
             @RequestBody SnsEventRequestDTO.CreateSnsRequest request,

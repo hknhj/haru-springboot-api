@@ -1,8 +1,8 @@
 package com.haru.api.global.interceptor;
 
+import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.enums.DocumentType;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
 import com.haru.api.user.domain.User;
@@ -34,7 +34,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
     private final HashIdUtil hashIdUtil;
 
-    private final MeetingRepository meetingRepository;
+    private final MeetingQueryUseCase meetingQueryUseCase;
     private final SnsEventRepository snsEventRepository;
     private final MoodTrackerRepository moodTrackerRepository;
 
@@ -90,7 +90,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
             Object foundDocument = switch (documentType) {
                 case AI_MEETING_MANAGER -> {
                     Long documentId = Long.parseLong(documentIdStr);
-                    yield meetingRepository.findMeetingByIdIfUserHasAccess(userId, documentId)
+                    yield meetingQueryUseCase.getDocumentWithPermissionCheck(userId, documentId)
                             .orElseThrow(() -> new MemberHandler(ErrorStatus.MEMBER_HAS_NO_ACCESS_TO_MEETING));
                 }
                 case SNS_EVENT_ASSISTANT -> {

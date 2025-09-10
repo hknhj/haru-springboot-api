@@ -3,6 +3,7 @@ package com.haru.api.user.application.service;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
 import com.haru.api.user.domain.UserDocumentLastOpened;
+import com.haru.api.user.domain.enums.DocumentType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,5 +24,10 @@ public class UserDocumentLastOpenedQueryUseCaseImpl implements UserDocumentLastO
     @Override
     public List<UserDocumentLastOpened> getRecentDocuments(Long userId, Long workspaceId, PageRequest pageRequest) {
         return userDocumentLastOpenedPort.findRecentDocuments(userId, workspaceId, pageRequest);
+    }
+
+    @Override
+    public List<UserDocumentLastOpened> getDocumentAccessHistory(Long documentId, DocumentType documentType) {
+        return userDocumentLastOpenedPort.findByDocumentIdAndDocumentType(documentId, documentType);
     }
 }

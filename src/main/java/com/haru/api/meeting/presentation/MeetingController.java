@@ -48,12 +48,15 @@ public class MeetingController {
     )
     @PostMapping(
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE },
-            produces = MediaType.APPLICATION_JSON_VALUE
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            path = "/workspaces/{workspaceId}"
     )
     public ApiResponse<MeetingResponseDTO.createMeetingResponse> createMeeting(
             @RequestPart("agendaFile") MultipartFile agendaFile,
             @RequestPart("request") MeetingRequestDTO.createMeetingRequest request,
-            @Parameter(hidden = true) @AuthUser User user
+            @PathVariable("workspaceId") String workspaceId,
+            @Parameter(hidden = true) @AuthUser User user,
+            @Parameter(hidden = true) @AuthWorkspace Workspace workspace
     ) {
 
         // file업로드가 되지 않는 경우 controller단에서 요청 처리
@@ -61,7 +64,7 @@ public class MeetingController {
             throw new GeneralException(ErrorStatus.MEETING_AGENDAFILE_NOT_FOUND);
         }
 
-        MeetingResponseDTO.createMeetingResponse response = meetingCommandUseCase.createMeeting(user, agendaFile, request);
+        MeetingResponseDTO.createMeetingResponse response = meetingCommandUseCase.createMeeting(user, workspace, agendaFile, request);
 
         return ApiResponse.onSuccess(response);
     }

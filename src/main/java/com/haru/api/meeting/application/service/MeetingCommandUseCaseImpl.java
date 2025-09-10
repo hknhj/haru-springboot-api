@@ -1,22 +1,21 @@
 package com.haru.api.meeting.application.service;
 
 import com.haru.api.meeting.application.port.in.MeetingCommandUseCase;
+import com.haru.api.meeting.application.port.out.MeetingPort;
+import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;
-import com.haru.api.user.infrastructure.jpa.UserDocumentLastOpenedJpaRepository;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.meeting.application.converter.MeetingConverter;
 import com.haru.api.meeting.presentation.dto.MeetingRequestDTO;
 import com.haru.api.meeting.presentation.dto.MeetingResponseDTO;
 import com.haru.api.meeting.domain.Meeting;
 import com.haru.api.meeting.domain.Keyword;
-import com.haru.api.meeting.infrastructure.MeetingRepository;
-import com.haru.api.meeting.infrastructure.KeywordRepository;
+import com.haru.api.meeting.infrastructure.jpa.KeywordJpaRepository;
 import com.haru.api.user.domain.User;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocumentTitle;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -53,34 +52,28 @@ import static com.haru.api.user.domain.enums.DocumentType.AI_MEETING_MANAGER;
 @Transactional(readOnly = true)
 public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
-    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-    private final WorkspaceJpaRepository workspaceJpaRepository;
-    private final MeetingRepository meetingRepository;
-    private final KeywordRepository keywordRepository;
-    private final ChatGPTClient chatGPTClient;
+    private final MeetingPort meetingPort;
+    private final KeywordJpaRepository keywordJpaRepository;
+
+    private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
-    private final UserDocumentLastOpenedJpaRepository userDocumentLastOpenedJpaRepository;
-    private final WebSocketSessionRegistry webSocketSessionRegistry;
-    private final SpeechSegmentRepository speechSegmentRepository;
-    private final MarkdownFileUploader markdownFileUploader;
+    private final UserDocumentLastOpenedQueryUseCase userDocumentLastOpenedQueryUseCase;
 
     private final AmazonS3Manager amazonS3Manager;
     private final Mp3EncoderService encoderService;
+    private final ChatGPTClient chatGPTClient;
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
+    private final SpeechSegmentRepository speechSegmentRepository;
+    private final MarkdownFileUploader markdownFileUploader;
 
     @Override
     @Transactional
     public MeetingResponseDTO.createMeetingResponse createMeeting(
             User user,
+            Workspace workspace,
             MultipartFile agendaFile,
             MeetingRequestDTO.createMeetingRequest request)
     {
-
-        Workspace foundWorkspace = workspaceJpaRepository.findById(request.getWorkspaceId())
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
-        if (!userWorkspaceJpaRepository.existsByUserIdAndWorkspaceId(user.getId(), foundWorkspace.getId()))
-            throw new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND);
-
 
         String extractedText = extractTextFromFile(agendaFile);
 
@@ -105,7 +98,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
                 request.getTitle(),
                 agendaSummary,
                 user,
-                foundWorkspace
+                workspace
         );
 
         if (!agendaKeywords.isEmpty()) {
@@ -114,18 +107,18 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
                 String trimmedKeyword = keyword.trim();
                 if (trimmedKeyword.isEmpty()) continue;
 
-                Keyword tag = keywordRepository.findByName(trimmedKeyword)
-                        .orElseGet(() -> keywordRepository.save(Keyword.builder().name(trimmedKeyword).build()));
+                Keyword tag = keywordJpaRepository.findByName(trimmedKeyword)
+                        .orElseGet(() -> keywordJpaRepository.save(Keyword.builder().name(trimmedKeyword).build()));
 
                 newMeeting.addTag(tag);
             }
         }
 
-        Meeting savedMeeting = meetingRepository.save(newMeeting);
+        Meeting savedMeeting = meetingPort.save(newMeeting);
 
         // meeting 생성 시 워크스페이스에 속해있는 모든 유저에 대해
         // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
+        List<User> usersInWorkspace = userWorkspaceQueryUseCase.getWorkspaceMembers(workspace.getId());
         userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMeeting);
 
         return MeetingConverter.toCreateMeetingResponse(savedMeeting);
@@ -148,17 +141,17 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle() + ".pdf");
         markdownFileUploader.updateFileTitle(meeting.getProceedingWordKeyName(), request.getTitle() + ".docx");
 
-        meetingRepository.save(meeting);
+        meetingPort.save(meeting);
     }
 
     @Override
     @Transactional
     @DeleteDocument
     public void deleteMeeting(User user, Meeting meeting) {
-        Meeting foundMeeting = meetingRepository.findById(meeting.getId())
+        Meeting foundMeeting = meetingPort.findById(meeting.getId())
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
@@ -175,16 +168,16 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
 
         speechSegmentRepository.deleteAll(segmentsToDelete);
 
-        meetingRepository.delete(foundMeeting);
+        meetingPort.delete(foundMeeting);
     }
 
     @Override
     @Transactional
     public void adjustProceeding(User user, Meeting meeting, MeetingRequestDTO.meetingProceedingRequest newProceeding){
-        Meeting foundMeeting = meetingRepository.findById(meeting.getId())
+        Meeting foundMeeting = meetingPort.findById(meeting.getId())
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByUserIdAndWorkspaceId(user.getId(), foundMeeting.getWorkspace().getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundMeeting.getWorkspace().getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         if (!foundMeeting.getCreator().getId().equals(user.getId()) && !foundUserWorkspace.getAuth().equals(Auth.ADMIN)) {
@@ -201,7 +194,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
             String newThumbnailKey = markdownFileUploader.createOrUpdateThumbnail(pdfKey, "meeting" + meeting.getId(), meeting.getThumbnailKeyName());
             log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
             // Meeting AI 회의록 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(foundMeeting.getId(), AI_MEETING_MANAGER);
+            List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedQueryUseCase.getDocumentAccessHistory(foundMeeting.getId(), AI_MEETING_MANAGER);
             foundLastOpenedList.forEach(userDocumentLastOpened -> {
                 userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
             });
@@ -234,7 +227,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
     public void processAfterMeeting(AudioSessionBuffer sessionBuffer) {
 
         // 현재 처리하고자 하는 session의 meeting entity
-        Meeting currentMeeting = meetingRepository.findById(sessionBuffer.getMeeting().getId())
+        Meeting currentMeeting = meetingPort.findById(sessionBuffer.getMeeting().getId())
                 .orElseThrow(() -> new MeetingHandler(ErrorStatus.MEETING_NOT_FOUND));
 
         // 버퍼에서 오디오 스트림 가져오기
@@ -283,7 +276,7 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
                     log.info("회의록 썸네일 생성/업데이트 완료. Key: {}", newThumbnailKey);
 
 
-                    List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedJpaRepository.findByDocumentIdAndDocumentType(currentMeeting.getId(), AI_MEETING_MANAGER);
+                    List<UserDocumentLastOpened> foundLastOpenedList = userDocumentLastOpenedQueryUseCase.getDocumentAccessHistory(currentMeeting.getId(), AI_MEETING_MANAGER);
                     foundLastOpenedList.forEach(userDocumentLastOpened -> {
                         userDocumentLastOpened.updateThumbnailKeyName(newThumbnailKey);
                     });
@@ -302,6 +295,11 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
         } else {
             log.warn("meetingId: {}에 처리할 오디오 데이터가 없습니다.", currentMeeting.getId());
         }
+    }
+
+    @Override
+    public Meeting save(Meeting meeting) {
+        return meetingPort.save(meeting);
     }
 
     /**
