@@ -1,15 +1,14 @@
 package com.haru.api.snsEvent.application.service;
 
 import com.haru.api.global.annotation.CreateDocument;
-import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnail;
+import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnailUseCase;
+import com.haru.api.snsEvent.application.port.in.WinnerDrawUseCase;
 import com.haru.api.snsEvent.application.port.out.*;
 import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
-import com.haru.api.snsEvent.domain.Participant;
 import com.haru.api.snsEvent.domain.SnsEvent;
-import com.haru.api.snsEvent.domain.Winner;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.snsEvent.domain.enums.ListType;
 import com.haru.api.user.domain.User;
@@ -22,13 +21,10 @@ import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
-import com.haru.api.infra.s3.AmazonS3Manager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
 
 import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 
@@ -37,22 +33,13 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.*;
 @RequiredArgsConstructor
 public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
-    private final InstagramPort instagramPort;
     private final SnsEventPort snsEventPort;
-    private final ParticipantPort participantPort;
-    private final WinnerPort winnerPort;
-    private final FileUploadPort fileUploadPort;
+    private final FilePort filePort;
 
-    private final ParticipantFilter participantFilter;
-    private final PickWinner pickWinner;
-
-    private final UploadFileAndThumbnail uploadFileAndThumbnail;
-
+    private final WinnerDrawUseCase winnerDrawUseCase;
+    private final UploadFileAndThumbnailUseCase uploadFileAndThumbnailUseCase;
     private final WorkspaceQueryUseCase workspaceQueryUseCase;
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
-
-    private final AmazonS3Manager amazonS3Manager;
-
 
     @Override
     @Transactional
@@ -69,51 +56,18 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, user);
         createdSnsEvent.setWorkspace(foundWorkspace);
 
-        // Instagram API 호출 후 참여자 리스트, 당첨자 리스트 생성 및 저장
-        String accessToken = foundWorkspace.getInstagramAccessToken();
-        if (accessToken == null || accessToken.isEmpty()) {
-            throw new SnsEventHandler(SNS_EVENT_NO_ACCESS_TOKEN);
-        }
-
-        SnsEventResponseDTO.InstagramMediaResponse instagramMediaResponse = instagramPort.fetchInstagramMedia(accessToken);
-
-        String[] splitedSnsEventLink = request.getSnsEventLink().split("/");
-        String requestShortCode = splitedSnsEventLink[splitedSnsEventLink.length - 1];
-
-        List<Participant> filteredCommentList = new ArrayList<>();
-        Set<String> filteredCommentSet = new HashSet<>();
-        List<Winner> winnerList = new ArrayList<>();
-
-        for (SnsEventResponseDTO.Media media : instagramMediaResponse.getData()) {
-            if (requestShortCode.equals(media.getShortcode())) {
-                List<SnsEventResponseDTO.Comment> commentList = instagramPort.getComments(media.getId(), accessToken);
-                filteredCommentSet.addAll(participantFilter.getFilteredParticipant(commentList, request.getSnsCondition()));
-            }
-            // 마지막까지 돌았는데 shortcode파싱해둔것과 일치하는게 없다면 error처리해야됨.
-            if (instagramMediaResponse.getData().size() - 1 == 0) {
-                throw new SnsEventHandler(SNS_EVENT_LINK_NOT_FOUND);
-            }
-        }
-        // 참여자 저장
-        for (String nickname : filteredCommentSet) {
-            Participant participant = SnsEventConverter.toParticipant(nickname);
-            participant.setSnsEvent(createdSnsEvent);
-            filteredCommentList.add(participant);
-        }
-        participantPort.saveAll(filteredCommentList);
-
-        // 당첨자 선정 후 저장
-        for (String nickname : pickWinner.getWinners(filteredCommentSet, request.getSnsCondition().getWinnerCount())) {
-            Winner winner = SnsEventConverter.toWinner(nickname);
-            winner.setSnsEvent(createdSnsEvent);
-            winnerList.add(winner);
-        }
-        winnerPort.saveAll(winnerList);
+        // 참여자, 당첨자 리스트 생성 및 저장
+        winnerDrawUseCase.getAndSaveParticipantAndWinner(
+                createdSnsEvent,
+                foundWorkspace.getInstagramAccessToken(),
+                request.getSnsEventLink(),
+                request.getSnsCondition()
+        );
 
         SnsEvent savedSnsEvent = snsEventPort.save(createdSnsEvent);
 
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
-        String thumbnailKeyName = uploadFileAndThumbnail.createAndUploadListFileAndThumbnail(savedSnsEvent);
+        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(savedSnsEvent);
 
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
@@ -133,21 +87,23 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.UpdateSnsEventRequest request
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
+        SnsEvent foundSnsEvent = snsEventPort.findById(snsEvent.getId());
+
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundSnsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !foundSnsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
 
-        snsEvent.updateTitle(request.getTitle());
-        SnsEvent savedSnsEvent = snsEventPort.save(snsEvent);
+        foundSnsEvent.updateTitle(request.getTitle());
+        SnsEvent savedSnsEvent = snsEventPort.save(foundSnsEvent);
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
-        fileUploadPort.deleteSnsEventFileAndThumbnailImage(savedSnsEvent);
+        filePort.deleteSnsEventFileAndThumbnailImage(savedSnsEvent);
 
-        String thumbnailKeyName = uploadFileAndThumbnail.createAndUploadListFileAndThumbnail(savedSnsEvent);
+        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(savedSnsEvent);
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
     }
@@ -160,18 +116,20 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEvent snsEvent
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
+        SnsEvent foundSnsEvent = snsEventPort.findById(snsEvent.getId());
+
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundSnsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
-        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+        // 삭제 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !foundSnsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
 
         // S3의 문서 및 썸네일 이미지 삭제
-        fileUploadPort.deleteSnsEventFileAndThumbnailImage(snsEvent);
+        filePort.deleteSnsEventFileAndThumbnailImage(foundSnsEvent);
 
-        snsEventPort.delete(snsEvent);
+        snsEventPort.delete(foundSnsEvent);
     }
 
     @Override
@@ -190,13 +148,13 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_참여자_리스트.pdf");
+                downloadLink = filePort.getDownloadLink(keyName, snsEventTitle + "_참여자_리스트.pdf");
             } else if (format == Format.DOCX) {
                 String keyName = snsEvent.getKeyNameParticipantWord();
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_참여자_리스트.docx");
+                downloadLink = filePort.getDownloadLink(keyName, snsEventTitle + "_참여자_리스트.docx");
             } else {
                 throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
@@ -206,13 +164,13 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_당첨자_리스트.pdf");
+                downloadLink = filePort.getDownloadLink(keyName, snsEventTitle + "_당첨자_리스트.pdf");
             } else if (format == Format.DOCX) {
                 String keyName = snsEvent.getKeyNameWinnerWord();
                 if (keyName == null || keyName.isEmpty()) {
                     throw new SnsEventHandler(SNS_EVENT_LIST_KEYNAME_NOT_FOUND);
                 }
-                downloadLink = amazonS3Manager.generatePresignedUrlForDownloadPdfAndWord(keyName, snsEventTitle + "_당첨자_리스트.docx");
+                downloadLink = filePort.getDownloadLink(keyName, snsEventTitle + "_당첨자_리스트.docx");
             } else {
                 throw new SnsEventHandler(SNS_EVENT_WRONG_FORMAT);
             }
