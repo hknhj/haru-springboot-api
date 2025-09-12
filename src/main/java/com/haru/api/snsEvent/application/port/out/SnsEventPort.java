@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public interface SnsEventPort {
 
+    SnsEvent save(SnsEvent snsEvent);
+
+    void delete(SnsEvent snsEvent);
+
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);
 
     List<SnsEvent> findAllByWorkspaceOrderByUpdatedAtDesc(Workspace foundWorkspace);

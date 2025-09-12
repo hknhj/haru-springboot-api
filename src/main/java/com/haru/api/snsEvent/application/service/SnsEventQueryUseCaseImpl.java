@@ -38,9 +38,9 @@ public class SnsEventQueryUseCaseImpl implements SnsEventQueryUseCase {
     @TrackLastOpened
     public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(User user, SnsEvent snsEvent) {
 
-        List<Participant> participantList = participantJpaRepository.findAllBySnsEvent(snsEvent);
+        List<Participant> participantList = participantJpaRepository.findAllBySnsEventId(snsEvent.getId());
 
-        List<Winner> winnerList = winnerJpaRepository.findAllBySnsEvent(snsEvent);
+        List<Winner> winnerList = winnerJpaRepository.findAllBySnsEventId(snsEvent.getId());
 
         return SnsEventConverter.toGetSnsEventRequest(
                 snsEvent,

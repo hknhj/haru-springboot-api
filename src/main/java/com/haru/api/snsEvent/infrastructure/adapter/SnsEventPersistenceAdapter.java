@@ -18,6 +18,16 @@ public class SnsEventPersistenceAdapter implements SnsEventPort {
     private final SnsEventJpaRepository snsEventJpaRepository;
 
     @Override
+    public SnsEvent save(SnsEvent snsEvent) {
+        return snsEventJpaRepository.save(snsEvent);
+    }
+
+    @Override
+    public void delete(SnsEvent snsEvent) {
+        snsEventJpaRepository.delete(snsEvent);
+    }
+
+    @Override
     public List<SnsEvent> findAllByWorkspaceId(Long workspaceId) {
         return snsEventJpaRepository.findAllByWorkspaceId(workspaceId);
     }

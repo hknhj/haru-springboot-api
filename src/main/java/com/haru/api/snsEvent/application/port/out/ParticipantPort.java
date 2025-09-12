@@ -1,12 +1,13 @@
 package com.haru.api.snsEvent.application.port.out;
 
 import com.haru.api.snsEvent.domain.Participant;
-import com.haru.api.snsEvent.domain.SnsEvent;
 
 import java.util.List;
 
 public interface ParticipantPort {
 
-    List<Participant> findAllBySnsEvent(SnsEvent foundSnsEvent);
+    void saveAll(List<Participant> participants);
+
+    List<Participant> findAllBySnsEventId(Long snsEventId);
 
 }

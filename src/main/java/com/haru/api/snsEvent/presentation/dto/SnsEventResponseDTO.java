@@ -3,6 +3,7 @@ package com.haru.api.snsEvent.presentation.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.haru.api.shared_kernel.domain.CreatedDocument;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,14 @@ import java.util.List;
 public class SnsEventResponseDTO {
     @Getter
     @Builder
-    public static class CreateSnsEventResponse {
+    public static class CreateSnsEventResponse implements CreatedDocument {
         @JsonSerialize(using = ToStringSerializer.class)
         private Long snsEventId;
+        private String title;
+
+        public Long getId() {
+            return this.snsEventId;
+        }
     }
 
     @Getter
