@@ -12,21 +12,18 @@ import com.haru.api.snsEvent.domain.Participant;
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.snsEvent.domain.Winner;
 import com.haru.api.snsEvent.domain.enums.Format;
-import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
 import com.haru.api.snsEvent.domain.enums.ListType;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.DocumentType;
+import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
 import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
-import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
-import com.haru.api.infra.api.restTemplate.InstagramOauth2RestTemplate;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -46,17 +43,19 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     private final SnsEventPort snsEventPort;
     private final ParticipantPort participantPort;
     private final WinnerPort winnerPort;
+    private final FileUploadPort fileUploadPort;
 
     private final ParticipantFilter participantFilter;
 
     private final UploadFileAndThumbnail uploadFileAndThumbnail;
 
-    private final WorkspaceJpaRepository workspaceJpaRepository;
+    private final WorkspaceQueryUseCase workspaceQueryUseCase;
     private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
 
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
-    private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
+
     private final AmazonS3Manager amazonS3Manager;
+
 
     @Override
     @Transactional
@@ -67,8 +66,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.CreateSnsRequest request
     ) {
 
-        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
-                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
+        Workspace foundWorkspace = workspaceQueryUseCase.getWorkspace(workspace.getId());
 
         // SNS 이벤트 생성
         SnsEvent createdSnsEvent = SnsEventConverter.toSnsEvent(request, user);
@@ -128,43 +126,6 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
                 .build();
     }
 
-
-    @Override
-    @Transactional
-    public SnsEventResponseDTO.LinkInstagramAccountResponse getInstagramAccessTokenAndAccount(
-            String code,
-            Workspace workspace,
-            InstagramRedirectType instagramRedirectType
-    ) {
-        String shortLivedAccessToken;
-        String longLivedAccessToken;
-        Map<String, Object> userInfo;
-        try {
-            // 1. Access Token 요청
-            shortLivedAccessToken = instagramOauth2RestTemplate.getShortLivedAccessTokenUrl(
-                    code,
-                    instagramRedirectType
-            );
-            // 2. 단기 토큰을 장기(Long-Lived) 토큰으로 교환
-            longLivedAccessToken = instagramOauth2RestTemplate.getLongLivedAccessToken(shortLivedAccessToken);
-            // 3. 장기 토큰으로 사용자 계정 정보 요청
-            userInfo = instagramOauth2RestTemplate.getInstagramAccountInfo(longLivedAccessToken);
-        } catch (Exception e) {
-            log.error("Instagram OAuth2 처리 중 오류 발생: {}", e.getMessage());
-            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_API_ERROR);
-        }
-        // 4. 워크스페이스에 인스타그램 계정 정보 저장
-        String instagramId = (String) userInfo.get("user_id");
-        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
-                .orElseThrow(() -> new WorkspaceHandler(WORKSPACE_NOT_FOUND));
-        if (foundWorkspace.getInstagramId() != null && foundWorkspace.getInstagramId().equals(instagramId)) {
-            throw new SnsEventHandler(SNS_EVENT_INSTAGRAM_ALREADY_LINKED);
-        }
-        foundWorkspace.saveInstagramId(instagramId);
-        foundWorkspace.saveInstagramAccessToken(longLivedAccessToken);
-        foundWorkspace.saveInstagramAccountName((String) userInfo.get("username"));
-        return SnsEventConverter.toLinkInstagramAccountResponse((String) userInfo.get("username"));
-    }
   
     @Override
     @Transactional
@@ -187,7 +148,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         SnsEvent savedSnsEvent = snsEventPort.save(snsEvent);
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
-        deleteS3FileAndThumnailImage(savedSnsEvent);
+        fileUploadPort.deleteSnsEventFileAndThumbnailImage(savedSnsEvent);
 
         String thumbnailKeyName = uploadFileAndThumbnail.createAndUploadListFileAndThumbnail(savedSnsEvent);
         // sns event 썸네일 key name 초기화
@@ -215,7 +176,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         }
 
         // S3의 문서 및 썸네일 이미지 삭제
-        deleteS3FileAndThumnailImage(snsEvent);
+        fileUploadPort.deleteSnsEventFileAndThumbnailImage(snsEvent);
 
         snsEventPort.delete(snsEvent);
 
@@ -280,13 +241,5 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         }
 
         return list.subList(0, n); // 앞에서 n개만 추출
-    }
-
-    private void deleteS3FileAndThumnailImage(SnsEvent snsEvent) {
-        amazonS3Manager.deleteFile(snsEvent.getKeyNameParticipantPdf());
-        amazonS3Manager.deleteFile(snsEvent.getKeyNameParticipantWord());
-        amazonS3Manager.deleteFile(snsEvent.getKeyNameWinnerPdf());
-        amazonS3Manager.deleteFile(snsEvent.getKeyNameWinnerWord());
-        amazonS3Manager.deleteFile(snsEvent.getThumbnailKeyName());
     }
 }
