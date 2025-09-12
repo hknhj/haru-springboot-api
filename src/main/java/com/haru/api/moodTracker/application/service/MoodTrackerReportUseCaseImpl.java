@@ -1,13 +1,12 @@
 package com.haru.api.moodTracker.application.service;
 
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
+import com.haru.api.moodTracker.application.port.out.*;
 import com.haru.api.moodTracker.domain.*;
-import com.haru.api.moodTracker.infrastructure.jpa.*;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
-import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.global.util.file.FileConvertHelper;
 import com.haru.api.infra.api.dto.SurveyReportResponse;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
@@ -15,6 +14,7 @@ import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.infra.api.client.ChatGPTClient;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
@@ -42,12 +42,12 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.MOOD_TRACKE
 public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
 
     private final ChatGPTClient chatGPTClient;
-    private final MoodTrackerJpaRepository moodTrackerJpaRepository;
-    private final SurveyQuestionJpaRepository surveyQuestionJpaRepository;
-    private final SubjectiveAnswerJpaRepository subjectiveAnswerJpaRepository;
-    private final MultipleChoiceAnswerJpaRepository multipleChoiceAnswerJpaRepository;
-    private final CheckboxChoiceAnswerJpaRepository checkboxChoiceAnswerJpaRepository;
-    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
+
+    private final MoodTrackerPort moodTrackerPort;
+    private final SurveyQuestionPort surveyQuestionPort;
+    private final SubjectiveAnswerPort subjectiveAnswerPort;
+    private final MultipleChoiceAnswerPort multipleChoiceAnswerPort;
+    private final CheckboxChoiceAnswerPort checkboxChoiceAnswerPort;
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
 
     private final AmazonS3Manager amazonS3Manager;
@@ -57,16 +57,16 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
 
     @Async
     public void generateReport(Long moodTrackerId) {
-        MoodTracker foundMoodTracker = moodTrackerJpaRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerPort.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // 전체 질문 조회 (ID 기준 정렬 보장)
-        List<SurveyQuestion> questions = surveyQuestionJpaRepository.findAllByMoodTrackerId(moodTrackerId);
+        List<SurveyQuestion> questions = surveyQuestionPort.findAllByMoodTrackerId(moodTrackerId);
 
         // 응답 수집 (질문 기반 조회)
-        List<SubjectiveAnswer> subjectiveAnswerList = subjectiveAnswerJpaRepository.findAllBySurveyQuestionIn(questions);
-        List<MultipleChoiceAnswer> multipleAnswerList = multipleChoiceAnswerJpaRepository.findAllByMultipleChoice_SurveyQuestionIn(questions);
-        List<CheckboxChoiceAnswer> checkboxAnswerList = checkboxChoiceAnswerJpaRepository.findAllByCheckboxChoice_SurveyQuestionIn(questions);
+        List<SubjectiveAnswer> subjectiveAnswerList = subjectiveAnswerPort.findAllBySurveyQuestionIn(questions);
+        List<MultipleChoiceAnswer> multipleAnswerList = multipleChoiceAnswerPort.findAllByMultipleChoice_SurveyQuestionIn(questions);
+        List<CheckboxChoiceAnswer> checkboxAnswerList = checkboxChoiceAnswerPort.findAllByCheckboxChoice_SurveyQuestionIn(questions);
 
         // 통계 생성용 맵
         Map<Long, List<SubjectiveAnswer>> subjectiveMap = subjectiveAnswerList.stream()
@@ -118,8 +118,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
             throw new RuntimeException("GPT 응답 파싱 실패", e);
         }
 
-        moodTrackerJpaRepository.save(foundMoodTracker);
-
+        moodTrackerPort.save(foundMoodTracker);
 
     }
 
@@ -208,7 +207,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
     }
 
     private void uploadReportFileAndThumbnail(Long moodTrackerId){
-        MoodTracker foundMoodTracker = moodTrackerJpaRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerPort.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // 리포트 파일 생성
@@ -264,7 +263,6 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
         foundMoodTracker.updateThumbnailKey(thumbnailKey);
 
         // Mood Tracker 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundMoodTracker.getWorkspace().getId());
         userDocumentLastOpenedCommandUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(
                 foundMoodTracker,
                 MoodTrackerRequestDTO.UpdateTitleRequest.builder().title(foundMoodTracker.getTitle()).build()
@@ -288,7 +286,7 @@ public class MoodTrackerReportUseCaseImpl implements MoodTrackerReportUseCase {
 
     @Override
     public void deleteReportFileAndThumbnail(Long moodTrackerId) {
-        MoodTracker foundMoodTracker = moodTrackerJpaRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerPort.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         amazonS3Manager.deleteFile(foundMoodTracker.getPdfReportKey());

@@ -16,4 +16,6 @@ public interface UserWorkspaceQueryUseCase {
     List<User> getWorkspaceMembers(Long workspaceId);
 
     Optional<UserWorkspace> getUserWorkspace(Long userId, Long workspaceId);
+
+    List<String> getEmailsInWorkspace(Long workspaceId);
 }

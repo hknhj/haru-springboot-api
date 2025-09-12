@@ -3,7 +3,7 @@ package com.haru.api.moodTracker.application.service;
 import com.haru.api.global.annotation.TrackLastOpened;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerQueryUseCase;
 import com.haru.api.moodTracker.application.port.out.MoodTrackerPort;
-import com.haru.api.moodTracker.infrastructure.jpa.SurveyQuestionJpaRepository;
+import com.haru.api.moodTracker.application.port.out.SurveyQuestionPort;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
 import com.haru.api.moodTracker.domain.MoodTracker;
@@ -35,7 +35,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
 
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
 
-    private final SurveyQuestionJpaRepository surveyQuestionJpaRepository;
+    private final SurveyQuestionPort surveyQuestionPort;
 
     @Override
     public MoodTrackerResponseDTO.PreviewList getPreviewList(User user, Workspace workspace) {
@@ -78,7 +78,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
         MoodTracker foundMoodTracker = moodTrackerPort.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
-        List<SurveyQuestion> questionList = surveyQuestionJpaRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
+        List<SurveyQuestion> questionList = surveyQuestionPort.findAllByMoodTrackerId(foundMoodTracker.getId());
 
         return MoodTrackerConverter.toQuestionResultDTO(foundMoodTracker, questionList);
     }
@@ -107,7 +107,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FINISHED);
         }
 
-        List<String> suggestionList = surveyQuestionJpaRepository.findAllByMoodTrackerId(moodTracker.getId()).stream()
+        List<String> suggestionList = surveyQuestionPort.findAllByMoodTrackerId(moodTracker.getId()).stream()
                 .map(SurveyQuestion::getSuggestion)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -139,7 +139,7 @@ public class MoodTrackerQueryUseCaseImpl implements MoodTrackerQueryUseCase {
             throw new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FINISHED);
         }
 
-        List<SurveyQuestion> questions = surveyQuestionJpaRepository.findAllByMoodTrackerId(moodTracker.getId());
+        List<SurveyQuestion> questions = surveyQuestionPort.findAllByMoodTrackerId(moodTracker.getId());
 
         return MoodTrackerConverter.toResponseResultDTO(moodTracker, questions);
     }

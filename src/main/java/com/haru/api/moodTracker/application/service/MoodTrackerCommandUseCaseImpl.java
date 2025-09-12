@@ -4,9 +4,8 @@ import com.haru.api.global.annotation.CreateDocument;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerCommandUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
-import com.haru.api.moodTracker.application.port.out.MoodTrackerPort;
+import com.haru.api.moodTracker.application.port.out.*;
 import com.haru.api.moodTracker.domain.*;
-import com.haru.api.moodTracker.infrastructure.jpa.*;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
@@ -44,15 +43,15 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
     private final MoodTrackerPort moodTrackerPort;
     private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
 
-    private final SurveyQuestionJpaRepository surveyQuestionJpaRepository;
-    private final MultipleChoiceJpaRepository multipleChoiceJpaRepository;
-    private final CheckboxChoiceJpaRepository checkboxChoiceJpaRepository;
+    private final SurveyQuestionPort surveyQuestionPort;
+    private final MultipleChoicePort multipleChoicePort;
+    private final CheckboxChoicePort checkBoxChoicePort;
 
     private final MoodTrackerMailUseCase moodTrackerMailUseCase;
 
-    private final MultipleChoiceAnswerJpaRepository multipleChoiceAnswerJpaRepository;
-    private final CheckboxChoiceAnswerJpaRepository checkboxChoiceAnswerJpaRepository;
-    private final SubjectiveAnswerJpaRepository subjectiveAnswerJpaRepository;
+    private final MultipleChoiceAnswerPort multipleChoiceAnswerPort;
+    private final CheckboxChoiceAnswerPort checkBoxChoiceAnswerPort;
+    private final SubjectiveAnswerPort subjectiveAnswerPort;
 
     private final MoodTrackerReportUseCase moodTrackerReportUseCase;
 
@@ -78,14 +77,14 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         // 선택지 생성 및 저장
         for (MoodTrackerRequestDTO.SurveyQuestion questionDTO : request.getQuestions()) {
             SurveyQuestion question = MoodTrackerConverter.toSurveyQuestion(questionDTO, moodTracker);
-            surveyQuestionJpaRepository.save(question);
+            surveyQuestionPort.save(question);
 
             if (questionDTO.getType() == MULTIPLE_CHOICE) {
                 List<MultipleChoice> choices = MoodTrackerConverter.toMultipleChoiceList(questionDTO.getOptions(), question);
-                multipleChoiceJpaRepository.saveAll(choices);
+                multipleChoicePort.saveAll(choices);
             } else if (questionDTO.getType() == CHECKBOX_CHOICE) {
                 List<CheckboxChoice> choices = MoodTrackerConverter.toCheckboxChoiceList(questionDTO.getOptions(), question);
-                checkboxChoiceJpaRepository.saveAll(choices);
+                checkBoxChoicePort.saveAll(choices);
             }
         }
 
@@ -199,7 +198,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> foundQuestions = surveyQuestionJpaRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
+        List<SurveyQuestion> foundQuestions = surveyQuestionPort.findAllByMoodTrackerId(foundMoodTracker.getId());
         Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
@@ -217,7 +216,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             switch (dto.getType()) {
                 case MULTIPLE_CHOICE -> {
                     // 질문 id와 선택지 id 함께 객관식 선택지 엔티티 조회 후 추가
-                    MultipleChoice foundMultipleChoice = multipleChoiceJpaRepository
+                    MultipleChoice foundMultipleChoice = multipleChoicePort
                             .findByIdAndSurveyQuestionId(dto.getMultipleChoiceId(), dto.getQuestionId())
                             .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION));
 
@@ -227,7 +226,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
                 }
                 case CHECKBOX_CHOICE -> {
                     // 질문 id와 선택지 id 함께 체크박스 선택지 엔티티 목록 조회 후 추가
-                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceJpaRepository
+                    List<CheckboxChoice> foundCheckboxChoices = checkBoxChoicePort
                             .findAllByIdInAndSurveyQuestionId(dto.getCheckboxChoiceIdList(), dto.getQuestionId());
 
                     // 요청 개수와 조회 개수가 다르면 → 유효하지 않은 선택지 포함
@@ -260,9 +259,9 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         }
 
         // 일괄 저장
-        multipleChoiceAnswerJpaRepository.saveAll(multipleChoiceAnswers);
-        checkboxChoiceAnswerJpaRepository.saveAll(checkboxChoiceAnswers);
-        subjectiveAnswerJpaRepository.saveAll(subjectiveAnswers);
+        multipleChoiceAnswerPort.saveAll(multipleChoiceAnswers);
+        checkBoxChoiceAnswerPort.saveAll(checkboxChoiceAnswers);
+        subjectiveAnswerPort.saveAll(subjectiveAnswers);
 
         // 답변자 수 증가
         moodTrackerPort.addRespondentsNum(foundMoodTracker.getId());

@@ -47,4 +47,9 @@ public class UserWorkspaceQueryUseCaseImpl implements UserWorkspaceQueryUseCase 
     public Optional<UserWorkspace> getUserWorkspace(Long userId, Long workspaceId) {
         return userWorkspacePort.findByUserIdAndWorkspaceId(userId, workspaceId);
     }
+
+    @Override
+    public List<String> getEmailsInWorkspace(Long workspaceId) {
+        return userWorkspacePort.findEmailsByWorkspaceId(workspaceId);
+    }
 }
