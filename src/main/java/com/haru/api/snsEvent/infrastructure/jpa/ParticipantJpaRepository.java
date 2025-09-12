@@ -1,4 +1,4 @@
-package com.haru.api.snsEvent.infrastructure;
+package com.haru.api.snsEvent.infrastructure.jpa;
 
 import com.haru.api.snsEvent.domain.Participant;
 import com.haru.api.snsEvent.domain.SnsEvent;
@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ParticipantRepository extends JpaRepository<Participant, Long> {
+public interface ParticipantJpaRepository extends JpaRepository<Participant, Long> {
+
     List<Participant> findAllBySnsEvent(SnsEvent foundSnsEvent);
+
 }

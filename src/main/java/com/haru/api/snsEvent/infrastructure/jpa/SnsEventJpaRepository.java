@@ -1,4 +1,4 @@
-package com.haru.api.snsEvent.infrastructure;
+package com.haru.api.snsEvent.infrastructure.jpa;
 
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.workspace.domain.Workspace;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SnsEventRepository extends JpaRepository<SnsEvent, Long> {
+public interface SnsEventJpaRepository extends JpaRepository<SnsEvent, Long> {
 
     @Query("SELECT m FROM SnsEvent m WHERE m.workspace.id = :workspaceId")
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);

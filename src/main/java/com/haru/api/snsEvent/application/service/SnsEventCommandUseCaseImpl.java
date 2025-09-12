@@ -11,9 +11,9 @@ import com.haru.api.snsEvent.domain.Winner;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.snsEvent.domain.enums.InstagramRedirectType;
 import com.haru.api.snsEvent.domain.enums.ListType;
-import com.haru.api.snsEvent.infrastructure.ParticipantRepository;
-import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
-import com.haru.api.snsEvent.infrastructure.WinnerRepository;
+import com.haru.api.snsEvent.infrastructure.jpa.ParticipantJpaRepository;
+import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
+import com.haru.api.snsEvent.infrastructure.jpa.WinnerJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
@@ -57,11 +57,11 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
 
     private final SpringTemplateEngine templateEngine;
 
-    private final SnsEventRepository snsEventRepository;
+    private final SnsEventJpaRepository snsEventJpaRepository;
     private final WorkspaceJpaRepository workspaceJpaRepository;
     private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-    private final ParticipantRepository participantRepository;
-    private final WinnerRepository winnerRepository;
+    private final ParticipantJpaRepository participantJpaRepository;
+    private final WinnerJpaRepository winnerJpaRepository;
     private final RestTemplate restTemplate;
     private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
     private final InstagramOauth2RestTemplate instagramOauth2RestTemplate;
@@ -157,16 +157,16 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             participant.setSnsEvent(createdSnsEvent);
             filteredCommentList.add(participant);
         }
-        participantRepository.saveAll(filteredCommentList);
+        participantJpaRepository.saveAll(filteredCommentList);
         // 당첨자 선정 후 저장
         for (String nickname : pickWinners(filteredCommentSet, request.getSnsCondition().getWinnerCount())) {
             Winner winner = SnsEventConverter.toWinner(nickname);
             winner.setSnsEvent(createdSnsEvent);
             winnerList.add(winner);
         }
-        winnerRepository.saveAll(winnerList);
+        winnerJpaRepository.saveAll(winnerList);
 
-        SnsEvent savedSnsEvent = snsEventRepository.save(createdSnsEvent);
+        SnsEvent savedSnsEvent = snsEventJpaRepository.save(createdSnsEvent);
 
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
         String thumbnailKeyName = createAndUploadListFileAndThumbnail(savedSnsEvent);
@@ -240,7 +240,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         }
 
         snsEvent.updateTitle(request.getTitle());
-        SnsEvent savedSnsEvent = snsEventRepository.save(snsEvent);
+        SnsEvent savedSnsEvent = snsEventJpaRepository.save(snsEvent);
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
         deleteS3FileAndThumnailImage(savedSnsEvent);
@@ -273,7 +273,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         // S3의 문서 및 썸네일 이미지 삭제
         deleteS3FileAndThumnailImage(snsEvent);
 
-        snsEventRepository.delete(snsEvent);
+        snsEventJpaRepository.delete(snsEvent);
 
     }
 
@@ -332,7 +332,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             ListType listType
     ) {
         if (listType == ListType.PARTICIPANT) {
-            List<Participant> participantList = participantRepository.findAllBySnsEvent(snsEvent);
+            List<Participant> participantList = participantJpaRepository.findAllBySnsEvent(snsEvent);
             List<Participant> leftList = new ArrayList<>();
             List<Participant> rightList = new ArrayList<>();
             int total = participantList.size();
@@ -346,7 +346,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             // 템플릿 렌더링 → HTML 문자열 생성
             return templateEngine.process("sns-event-list-pdf-template", context);
         } else if (listType == ListType.WINNER) {
-            List<Winner> winnerList = winnerRepository.findAllBySnsEvent(snsEvent);
+            List<Winner> winnerList = winnerJpaRepository.findAllBySnsEvent(snsEvent);
             List<Winner> leftList = new ArrayList<>();
             List<Winner> rightList = new ArrayList<>();
             int total = winnerList.size();
@@ -538,13 +538,13 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     private byte[] createWord(ListType listType, String listTitle, SnsEvent snsEvent) throws Exception { // 참여자 또는 당첨자 리스트 DB에서 가져와 표로 만들어 word로 변환해서 응답주기
         List<String> list = new ArrayList<>();
         if (listType == ListType.PARTICIPANT) {
-            List<Participant> participantList = participantRepository.findAllBySnsEvent(snsEvent);
+            List<Participant> participantList = participantJpaRepository.findAllBySnsEvent(snsEvent);
             for (Participant participant : participantList) {
                 list.add(participant.getNickname());
             }
             return createTable(list, listTitle);
         } else {
-            List<Winner> winnerList = winnerRepository.findAllBySnsEvent(snsEvent);
+            List<Winner> winnerList = winnerJpaRepository.findAllBySnsEvent(snsEvent);
             for (Winner winner : winnerList) {
                 list.add(winner.getNickname());
             }

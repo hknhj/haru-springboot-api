@@ -4,7 +4,7 @@ import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
-import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
+import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.infra.security.jwt.SecurityUtil;
 import com.haru.api.global.annotation.AuthDocument;
@@ -35,7 +35,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
     private final HashIdUtil hashIdUtil;
 
     private final MeetingQueryUseCase meetingQueryUseCase;
-    private final SnsEventRepository snsEventRepository;
+    private final SnsEventJpaRepository snsEventJpaRepository;
     private final MoodTrackerRepository moodTrackerRepository;
 
     @Override
@@ -95,7 +95,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
                 }
                 case SNS_EVENT_ASSISTANT -> {
                     Long documentId = Long.parseLong(documentIdStr);
-                    yield snsEventRepository.findSnsEventByIdIfUserHasAccess(userId, documentId)
+                    yield snsEventJpaRepository.findSnsEventByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new SnsEventHandler(ErrorStatus.SNS_EVENT_NOT_FOUND));
                 }
                 case TEAM_MOOD_TRACKER -> {
