@@ -2,13 +2,13 @@ package com.haru.api.snsEvent.application.service;
 
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.application.port.in.SnsEventQueryUseCase;
+import com.haru.api.snsEvent.application.port.out.ParticipantPort;
+import com.haru.api.snsEvent.application.port.out.SnsEventPort;
+import com.haru.api.snsEvent.application.port.out.WinnerPort;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
 import com.haru.api.snsEvent.domain.Participant;
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.snsEvent.domain.Winner;
-import com.haru.api.snsEvent.infrastructure.jpa.ParticipantJpaRepository;
-import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
-import com.haru.api.snsEvent.infrastructure.jpa.WinnerJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.TrackLastOpened;
@@ -21,14 +21,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SnsEventQueryUseCaseImpl implements SnsEventQueryUseCase {
 
-    private final SnsEventJpaRepository snsEventJpaRepository;
-    private final ParticipantJpaRepository participantJpaRepository;
-    private final WinnerJpaRepository winnerJpaRepository;
+    private final SnsEventPort snsEventPort;
+    private final ParticipantPort participantPort;
+    private final WinnerPort winnerPort;
 
     @Override
     public SnsEventResponseDTO.GetSnsEventListRequest getSnsEventList(User user, Workspace workspace) {
 
-        List<SnsEvent> snsEventList = snsEventJpaRepository.findAllByWorkspaceOrderByUpdatedAtDesc(workspace);
+        List<SnsEvent> snsEventList = snsEventPort.findAllByWorkspaceOrderByUpdatedAtDesc(workspace);
 
         return SnsEventConverter.toGetSnsEventListRequest(snsEventList);
 
@@ -38,9 +38,9 @@ public class SnsEventQueryUseCaseImpl implements SnsEventQueryUseCase {
     @TrackLastOpened
     public SnsEventResponseDTO.GetSnsEventRequest getSnsEvent(User user, SnsEvent snsEvent) {
 
-        List<Participant> participantList = participantJpaRepository.findAllBySnsEventId(snsEvent.getId());
+        List<Participant> participantList = participantPort.findAllBySnsEventId(snsEvent.getId());
 
-        List<Winner> winnerList = winnerJpaRepository.findAllBySnsEventId(snsEvent.getId());
+        List<Winner> winnerList = winnerPort.findAllBySnsEventId(snsEvent.getId());
 
         return SnsEventConverter.toGetSnsEventRequest(
                 snsEvent,
