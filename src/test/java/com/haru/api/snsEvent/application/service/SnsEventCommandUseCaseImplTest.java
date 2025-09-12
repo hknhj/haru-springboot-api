@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -200,5 +201,48 @@ class SnsEventCommandUseCaseImplTest {
         verify(snsEvent, never()).updateTitle(any(String.class));
         verify(snsEventPort, never()).save(any(SnsEvent.class));
         verify(filePort, never()).deleteSnsEventFileAndThumbnailImage(any(SnsEvent.class));
+    }
+
+    @Test
+    @DisplayName("SNS 이벤트 삭제 성공")
+    void deleteSnsEvent_Success() {
+
+        // given
+        UserWorkspace userWorkspace = UserWorkspace.builder().user(user).build();
+
+        given(snsEventPort.findById(snsEvent.getId())).willReturn(snsEvent);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId()))
+                .willReturn(Optional.of(userWorkspace));
+
+        // when
+        snsEventCommandUseCase.deleteSnsEvent(user, snsEvent);
+
+        // then
+        InOrder inOrder = inOrder(filePort, snsEventPort);
+
+        // S3 파일과 썸네일이 먼저 삭제되는지 확인
+        inOrder.verify(filePort, times(1)).deleteSnsEventFileAndThumbnailImage(snsEvent);
+        // DB에서 SNS 이벤트가 삭제되는지 확인
+        inOrder.verify(snsEventPort, times(1)).delete(snsEvent);
+    }
+
+    @Test
+    @DisplayName("SNS 이벤트 삭제 실패 - 권한 없음 (생성자가 아님)")
+    void deleteSnsEvent_Fail_NoAuthority() {
+        // given (준비)
+        // otherUser는 워크스페이스 멤버이지만, snsEvent 생성자는 아님
+        UserWorkspace otherUserWorkspace = UserWorkspace.builder().user(otherUser).build();
+
+        given(snsEventPort.findById(snsEvent.getId())).willReturn(snsEvent);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(otherUser.getId(), snsEvent.getWorkspaceId()))
+                .willReturn(Optional.of(otherUserWorkspace));
+
+        // when & then
+        assertThatThrownBy(() -> snsEventCommandUseCase.deleteSnsEvent(otherUser, snsEvent))
+                .isInstanceOf(SnsEventHandler.class)
+                .hasMessageContaining("인스타그램 이벤트에 대한 수정 권한이 없습니다.");
+
+        verify(filePort, never()).deleteSnsEventFileAndThumbnailImage(any(SnsEvent.class));
+        verify(snsEventPort, never()).delete(any(SnsEvent.class));
     }
 }
