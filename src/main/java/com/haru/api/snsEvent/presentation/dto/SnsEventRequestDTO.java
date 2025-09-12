@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 public class SnsEventRequestDTO {
 
     @Getter
-    @Setter
-    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class CreateSnsRequest {
         private String title;
         private String snsEventLink;
@@ -17,9 +17,8 @@ public class SnsEventRequestDTO {
     }
 
     @Getter
-    @Setter
-    @NoArgsConstructor
     @AllArgsConstructor
+    @Builder
     public static class SnsCondition {
         private Integer winnerCount;
         private Boolean isPeriod;
@@ -27,12 +26,11 @@ public class SnsEventRequestDTO {
         private Boolean isKeyword;
         private String keyword;
         private Boolean isTagged;
-        private Integer tageCount;
+        private Integer tagCount;
     }
 
     @Getter
     @Builder
-    @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateSnsEventRequest implements DocumentModifier {
         private String title;

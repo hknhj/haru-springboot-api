@@ -73,7 +73,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
-                .snsEventId(createdSnsEvent.getId())
+                .snsEventId(savedSnsEvent.getId())
                 .build();
     }
 

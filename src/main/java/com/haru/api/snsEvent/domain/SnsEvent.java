@@ -41,6 +41,7 @@ public class SnsEvent extends BaseEntity implements Documentable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workspace_id")
+    @Setter
     private Workspace workspace;
 
     @Column(columnDefinition = "TEXT")
@@ -63,14 +64,6 @@ public class SnsEvent extends BaseEntity implements Documentable {
 
     @OneToMany(mappedBy = "snsEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Winner> winnerList = new ArrayList<>();
-
-    public void setWorkspace(Workspace workspace) {
-        this.workspace = workspace;
-        if (this.workspace != null) {
-            workspace.getSnsEventList().remove(this);
-        }
-        this.workspace.getSnsEventList().add(this);
-    }
 
     public void updateTitle(String title) {
         this.title = title;
