@@ -6,6 +6,8 @@ import com.haru.api.snsEvent.application.port.in.WinnerDrawUseCase;
 import com.haru.api.snsEvent.application.port.out.FilePort;
 import com.haru.api.snsEvent.application.port.out.SnsEventPort;
 import com.haru.api.snsEvent.domain.SnsEvent;
+import com.haru.api.snsEvent.domain.enums.Format;
+import com.haru.api.snsEvent.domain.enums.ListType;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
 import com.haru.api.user.domain.User;
@@ -17,6 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -74,12 +80,16 @@ class SnsEventCommandUseCaseImplTest {
                 .build();
         snsEvent = spy(SnsEvent.builder()
                 .id(1L)
-                .title("sns event 1")
+                .title("여름맞이 이벤트")
                 .workspace(workspace)
                 .creator(user)
                 .thumbnailKeyName("sns-event/100/thumbnail.jpg")
                 .snsLink("https://snsevent.com")
                 .snsLinkTitle("title")
+                .keyNameParticipantPdf("participant/pdf/key_name.pdf")
+                .keyNameParticipantWord("participant/word/key_name.docx")
+                .keyNameWinnerPdf("winner/pdf/key_name.pdf")
+                .keyNameWinnerWord("winner/word/key_name.docx")
                 .build());
     }
 
@@ -244,5 +254,46 @@ class SnsEventCommandUseCaseImplTest {
 
         verify(filePort, never()).deleteSnsEventFileAndThumbnailImage(any(SnsEvent.class));
         verify(snsEventPort, never()).delete(any(SnsEvent.class));
+    }
+
+    private static Stream<Arguments> provideSuccessArguments() {
+        return Stream.of(
+                Arguments.of(ListType.PARTICIPANT, Format.PDF, "participant/pdf/key_name.pdf", "여름맞이 이벤트_참여자_리스트.pdf"),
+                Arguments.of(ListType.PARTICIPANT, Format.DOCX, "participant/word/key_name.docx", "여름맞이 이벤트_참여자_리스트.docx"),
+                Arguments.of(ListType.WINNER, Format.PDF, "winner/pdf/key_name.pdf", "여름맞이 이벤트_당첨자_리스트.pdf"),
+                Arguments.of(ListType.WINNER, Format.DOCX, "winner/word/key_name.docx", "여름맞이 이벤트_당첨자_리스트.docx")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSuccessArguments")
+    @DisplayName("SNS 이벤트 리스트 다운로드 링크 생성 성공")
+    void downloadList_Success(ListType listType, Format format, String expectedKeyName, String expectedFileName) {
+
+        // given
+        String expectedDownloadLink = "https://s3.download.link/" + expectedKeyName;
+        given(filePort.getDownloadLink(eq(expectedKeyName), eq(expectedFileName)))
+                .willReturn(expectedDownloadLink);
+
+        // when
+        SnsEventResponseDTO.ListDownLoadLinkResponse response = snsEventCommandUseCase.downloadList(user, snsEvent, listType, format);
+
+        // then
+        verify(filePort).getDownloadLink(eq(expectedKeyName), eq(expectedFileName));
+        assertThat(response.getDownloadLink()).isEqualTo(expectedDownloadLink);
+    }
+
+    @Test
+    @DisplayName("다운로드 실패 - KeyName이 없을 경우")
+    void downloadList_Fail_KeyNameNotFound() {
+
+        // given
+        SnsEvent snsEventWithNoKey = SnsEvent.builder().title("키없는 이벤트").build();
+
+        // when & then
+        assertThatThrownBy(() -> snsEventCommandUseCase.downloadList(user, snsEventWithNoKey, ListType.PARTICIPANT, Format.PDF))
+                .isInstanceOf(SnsEventHandler.class)
+                .hasMessageContaining("리스트 다운로드중 키 이름이 존재하지 않습니다.");
+
     }
 }
