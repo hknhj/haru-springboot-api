@@ -49,7 +49,7 @@ public class ParticipantFilter {
             // 조건 3: 태그 개수 필터 (ex: @username 언급)
             if (pass && condition.getIsTagged()) {
                 int tagCount = countOccurrences(comment.getText(), "@");
-                if (tagCount < condition.getTageCount()) {
+                if (tagCount < condition.getTagCount()) {
                     pass = false;
                 }
             }

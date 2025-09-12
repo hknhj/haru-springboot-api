@@ -40,15 +40,6 @@ public class Workspace extends BaseEntity {
     @Column(length = 50)
     private String instagramAccountName;
 
-    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Meeting> meetingList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SnsEvent> snsEventList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MoodTracker> moodTrackerList = new ArrayList<>();
-
     public void updateTitle(String title) {
         this.title = title;
     }
