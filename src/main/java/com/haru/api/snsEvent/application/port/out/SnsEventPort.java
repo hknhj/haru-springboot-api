@@ -13,6 +13,8 @@ public interface SnsEventPort {
 
     void delete(SnsEvent snsEvent);
 
+    SnsEvent findById(Long snsEventId);
+
     List<SnsEvent> findAllByWorkspaceId(Long workspaceId);
 
     List<SnsEvent> findAllByWorkspaceOrderByUpdatedAtDesc(Workspace foundWorkspace);

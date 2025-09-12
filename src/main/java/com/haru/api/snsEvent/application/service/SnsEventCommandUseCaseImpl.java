@@ -87,16 +87,18 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.UpdateSnsEventRequest request
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
+        SnsEvent foundSnsEvent = snsEventPort.findById(snsEvent.getId());
+
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundSnsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !foundSnsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
 
-        snsEvent.updateTitle(request.getTitle());
-        SnsEvent savedSnsEvent = snsEventPort.save(snsEvent);
+        foundSnsEvent.updateTitle(request.getTitle());
+        SnsEvent savedSnsEvent = snsEventPort.save(foundSnsEvent);
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
         filePort.deleteSnsEventFileAndThumbnailImage(savedSnsEvent);
@@ -114,18 +116,20 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEvent snsEvent
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
+        SnsEvent foundSnsEvent = snsEventPort.findById(snsEvent.getId());
+
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), foundSnsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
-        // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
-        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !snsEvent.getCreator().getId().equals(user.getId())) {
+        // 삭제 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
+        if (!foundUserWorkspace.getUser().getId().equals(user.getId()) || !foundSnsEvent.getCreator().getId().equals(user.getId())) {
             throw new SnsEventHandler(SNS_EVENT_NO_AUTHORITY);
         }
 
         // S3의 문서 및 썸네일 이미지 삭제
-        filePort.deleteSnsEventFileAndThumbnailImage(snsEvent);
+        filePort.deleteSnsEventFileAndThumbnailImage(foundSnsEvent);
 
-        snsEventPort.delete(snsEvent);
+        snsEventPort.delete(foundSnsEvent);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.haru.api.snsEvent.infrastructure.adapter;
 
+import com.haru.api.global.apiPayload.code.status.ErrorStatus;
+import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.snsEvent.application.port.out.SnsEventPort;
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
@@ -25,6 +27,12 @@ public class SnsEventPersistenceAdapter implements SnsEventPort {
     @Override
     public void delete(SnsEvent snsEvent) {
         snsEventJpaRepository.delete(snsEvent);
+    }
+
+    @Override
+    public SnsEvent findById(Long snsEventId) {
+        return snsEventJpaRepository.findById(snsEventId)
+                .orElseThrow(() -> new SnsEventHandler(ErrorStatus.SNS_EVENT_NOT_FOUND));
     }
 
     @Override
