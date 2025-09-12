@@ -1,5 +1,6 @@
 package com.haru.api.snsEvent.presentation;
 
+import com.haru.api.snsEvent.application.port.in.LinkInstagramAccountUseCase;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
 import com.haru.api.snsEvent.domain.SnsEvent;
@@ -26,6 +27,7 @@ public class SnsEventController {
 
     private final SnsEventCommandUseCase snsEventCommandUseCase;
     private final SnsEventQueryUseCase snsEventQueryUseCase;
+    private final LinkInstagramAccountUseCase linkInstagramAccountUseCase;
 
     @Operation(
             summary = "SNS 이벤트 생성 API [v1.0 (2025-08-05)]",
@@ -70,7 +72,7 @@ public class SnsEventController {
     ) {
         System.out.println("Received accessToken: " + code);
         return ApiResponse.onSuccess(
-                snsEventCommandUseCase.getInstagramAccessTokenAndAccount(code, workspace, instagramRedirectType)
+                linkInstagramAccountUseCase.linkInstagramAccount(code, workspace, instagramRedirectType)
         );
     }
 

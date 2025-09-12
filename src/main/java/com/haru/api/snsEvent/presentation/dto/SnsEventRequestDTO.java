@@ -26,7 +26,7 @@ public class SnsEventRequestDTO {
         private LocalDateTime period;
         private Boolean isKeyword;
         private String keyword;
-        private Boolean isTaged;
+        private Boolean isTagged;
         private Integer tageCount;
     }
 

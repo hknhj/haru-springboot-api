@@ -4,7 +4,7 @@ import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.shared_kernel.domain.Documentable;
-import com.haru.api.snsEvent.infrastructure.SnsEventRepository;
+import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
     private final MeetingQueryUseCase meetingQueryUseCase;
-    private final SnsEventRepository snsEventRepository;
+    private final SnsEventJpaRepository snsEventJpaRepository;
     private final MoodTrackerRepository moodTrackerRepository;
 
     @Override
@@ -26,7 +26,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
         List<Documentable> documentList = new ArrayList<>();
 
         documentList.addAll(meetingQueryUseCase.getAllMeetingsInWorkspace(workspaceId));
-        documentList.addAll(snsEventRepository.findAllByWorkspaceId(workspaceId));
+        documentList.addAll(snsEventJpaRepository.findAllByWorkspaceId(workspaceId));
         documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspaceId));
 
         return documentList;
@@ -38,7 +38,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
         List<Documentable> documentList = new ArrayList<>();
 
         documentList.addAll(meetingQueryUseCase.getAllMeetingsForCalendar(workspaceId, startDate, endDate));
-        documentList.addAll(snsEventRepository.findAllForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(snsEventJpaRepository.findAllForCalendars(workspaceId, startDate, endDate));
         documentList.addAll(moodTrackerRepository.findAllForCalendars(workspaceId, startDate, endDate));
 
         return documentList;
