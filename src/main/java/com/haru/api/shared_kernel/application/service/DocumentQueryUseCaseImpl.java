@@ -1,7 +1,7 @@
 package com.haru.api.shared_kernel.application.service;
 
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
+import com.haru.api.moodTracker.infrastructure.jpa.MoodTrackerJpaRepository;
 import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
 import com.haru.api.shared_kernel.domain.Documentable;
 import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
@@ -18,7 +18,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
     private final MeetingQueryUseCase meetingQueryUseCase;
     private final SnsEventJpaRepository snsEventJpaRepository;
-    private final MoodTrackerRepository moodTrackerRepository;
+    private final MoodTrackerJpaRepository moodTrackerJpaRepository;
 
     @Override
     public List<Documentable> getDocumentsByWorkspaceId(Long workspaceId) {
@@ -27,7 +27,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
         documentList.addAll(meetingQueryUseCase.getAllMeetingsInWorkspace(workspaceId));
         documentList.addAll(snsEventJpaRepository.findAllByWorkspaceId(workspaceId));
-        documentList.addAll(moodTrackerRepository.findAllByWorkspaceId(workspaceId));
+        documentList.addAll(moodTrackerJpaRepository.findAllByWorkspaceId(workspaceId));
 
         return documentList;
     }
@@ -39,7 +39,7 @@ public class DocumentQueryUseCaseImpl implements DocumentQueryUseCase {
 
         documentList.addAll(meetingQueryUseCase.getAllMeetingsForCalendar(workspaceId, startDate, endDate));
         documentList.addAll(snsEventJpaRepository.findAllForCalendars(workspaceId, startDate, endDate));
-        documentList.addAll(moodTrackerRepository.findAllForCalendars(workspaceId, startDate, endDate));
+        documentList.addAll(moodTrackerJpaRepository.findAllForCalendars(workspaceId, startDate, endDate));
 
         return documentList;
     }

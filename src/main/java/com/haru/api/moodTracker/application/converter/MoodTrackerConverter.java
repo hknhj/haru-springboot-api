@@ -6,7 +6,6 @@ import com.haru.api.moodTracker.domain.*;
 import com.haru.api.moodTracker.domain.enums.QuestionType;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.global.util.HashIdUtil;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,9 +18,9 @@ public class MoodTrackerConverter {
     /**
      * MoodTracker 리스트 → PreviewList DTO 변환
      */
-    public static MoodTrackerResponseDTO.PreviewList toPreviewListDTO(List<MoodTracker> moodTrackers, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.PreviewList toPreviewListDTO(List<MoodTracker> moodTrackers) {
         List<MoodTrackerResponseDTO.Preview> previewList = moodTrackers.stream()
-                .map(m -> toPreviewDTO(m, hashIdUtil))
+                .map(MoodTrackerConverter::toPreviewDTO)
                 .collect(Collectors.toList());
 
         return MoodTrackerResponseDTO.PreviewList.builder()
@@ -32,9 +31,9 @@ public class MoodTrackerConverter {
     /**
      * 단일 MoodTracker → Preview DTO 변환
      */
-    private static MoodTrackerResponseDTO.Preview toPreviewDTO(MoodTracker moodTracker, HashIdUtil hashIdUtil) {
+    private static MoodTrackerResponseDTO.Preview toPreviewDTO(MoodTracker moodTracker) {
         return MoodTrackerResponseDTO.Preview.builder()
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .title(moodTracker.getTitle())
                 .updatedAt(moodTracker.getCreatedAt())
                 .dueDate(moodTracker.getDueDate())
@@ -113,9 +112,9 @@ public class MoodTrackerConverter {
     /**
      * 생성 결과 반환
      */
-    public static MoodTrackerResponseDTO.CreateResult toCreateResultDTO(MoodTracker moodTracker, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.CreateResult toCreateResultDTO(MoodTracker moodTracker) {
         return MoodTrackerResponseDTO.CreateResult.builder()
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .build();
     }
 
@@ -161,10 +160,10 @@ public class MoodTrackerConverter {
     /**
      *  분위기 트래커 설문 Base 정보 변환
      */
-    public static MoodTrackerResponseDTO.BaseResult toBaseResultDTO(MoodTracker moodTracker, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.BaseResult toBaseResultDTO(MoodTracker moodTracker) {
         return MoodTrackerResponseDTO.BaseResult.builder()
                 .workspaceId(moodTracker.getWorkspace().getId())
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
                 .creatorName(moodTracker.getCreator().getName())
@@ -178,10 +177,10 @@ public class MoodTrackerConverter {
     /**
      *  분위기 트래커 리포트 DTO 변환
      */
-    public static MoodTrackerResponseDTO.ReportResult toReportResultDTO(MoodTracker moodTracker, List<String> suggestionList, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.ReportResult toReportResultDTO(MoodTracker moodTracker, List<String> suggestionList) {
         return MoodTrackerResponseDTO.ReportResult.builder()
                 .workspaceId(moodTracker.getWorkspace().getId())
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
                 .creatorName(moodTracker.getCreator().getName())
@@ -196,7 +195,7 @@ public class MoodTrackerConverter {
     /**
      * 분위기 트래커 질문 DTO 반환
      */
-    public static MoodTrackerResponseDTO.QuestionResult toQuestionResultDTO(MoodTracker moodTracker, List<SurveyQuestion> questionList, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.QuestionResult toQuestionResultDTO(MoodTracker moodTracker, List<SurveyQuestion> questionList) {
         List<MoodTrackerResponseDTO.QuestionView> questionViewList = questionList.stream()
                 .map(question -> {
                     List<MoodTrackerResponseDTO.MultipleChoice> multipleChoices = question.getMultipleChoiceList().stream()
@@ -226,7 +225,7 @@ public class MoodTrackerConverter {
 
         return MoodTrackerResponseDTO.QuestionResult.builder()
                 .workspaceId(moodTracker.getWorkspace().getId())
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
                 .creatorName(moodTracker.getCreator().getName())
@@ -241,7 +240,7 @@ public class MoodTrackerConverter {
     /**
      * 분위기 트래커 응답 결과 DTO 변환
      */
-    public static MoodTrackerResponseDTO.ResponseResult toResponseResultDTO(MoodTracker moodTracker, List<SurveyQuestion> questions, HashIdUtil hashIdUtil) {
+    public static MoodTrackerResponseDTO.ResponseResult toResponseResultDTO(MoodTracker moodTracker, List<SurveyQuestion> questions) {
         List<MoodTrackerResponseDTO.QuestionResponseView> responseViews = questions.stream()
                 .map(q -> {
                     if (q.getType() == QuestionType.MULTIPLE_CHOICE) {
@@ -293,7 +292,7 @@ public class MoodTrackerConverter {
 
         return MoodTrackerResponseDTO.ResponseResult.builder()
                 .workspaceId(moodTracker.getWorkspace().getId())
-                .moodTrackerHashedId(hashIdUtil.encode(moodTracker.getId()))
+                .moodTrackerId(moodTracker.getId())
                 .title(moodTracker.getTitle())
                 .creatorId(moodTracker.getCreator().getId())
                 .creatorName(moodTracker.getCreator().getName())

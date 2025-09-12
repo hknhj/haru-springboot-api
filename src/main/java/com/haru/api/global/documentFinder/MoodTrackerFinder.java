@@ -1,7 +1,7 @@
 package com.haru.api.global.documentFinder;
 
 import com.haru.api.user.domain.enums.DocumentType;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
+import com.haru.api.moodTracker.infrastructure.jpa.MoodTrackerJpaRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
 import com.haru.api.global.util.HashIdUtil;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MoodTrackerFinder implements DocumentFinder{
 
-    private final MoodTrackerRepository moodTrackerRepository;
+    private final MoodTrackerJpaRepository moodTrackerJpaRepository;
     private final HashIdUtil hashIdUtil;
 
     @Override
@@ -23,7 +23,7 @@ public class MoodTrackerFinder implements DocumentFinder{
     @Override
     public Object findById(Object id) {
         Long decodedId = hashIdUtil.decode((String) id);
-        return moodTrackerRepository.findById(decodedId)
+        return moodTrackerJpaRepository.findById(decodedId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
     }
 }

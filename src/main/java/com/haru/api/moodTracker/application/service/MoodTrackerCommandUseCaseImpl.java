@@ -1,27 +1,26 @@
 package com.haru.api.moodTracker.application.service;
 
+import com.haru.api.global.annotation.CreateDocument;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerCommandUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.application.port.in.MoodTrackerReportUseCase;
+import com.haru.api.moodTracker.application.port.out.*;
 import com.haru.api.moodTracker.domain.*;
-import com.haru.api.moodTracker.infrastructure.*;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.moodTracker.application.converter.MoodTrackerConverter;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerRequestDTO;
 import com.haru.api.moodTracker.presentation.dto.MoodTrackerResponseDTO;
 import com.haru.api.moodTracker.domain.enums.MoodTrackerVisibility;
 import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.user.domain.User;
+import com.haru.api.user.domain.enums.DocumentType;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
-import com.haru.api.workspace.infrastructure.jpa.WorkspaceJpaRepository;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocument;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.*;
-import com.haru.api.global.util.HashIdUtil;
 import com.haru.api.infra.redis.RedisReportConsumer;
 import com.haru.api.infra.redis.RedisReportProducer;
 import lombok.RequiredArgsConstructor;
@@ -41,69 +40,58 @@ import static com.haru.api.moodTracker.domain.enums.QuestionType.*;
 @Transactional
 public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase {
 
-    private final MoodTrackerRepository moodTrackerRepository;
-    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
+    private final MoodTrackerPort moodTrackerPort;
+    private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
 
-    private final SurveyQuestionRepository surveyQuestionRepository;
-    private final MultipleChoiceRepository multipleChoiceRepository;
-    private final CheckboxChoiceRepository checkboxChoiceRepository;
+    private final SurveyQuestionPort surveyQuestionPort;
+    private final MultipleChoicePort multipleChoicePort;
+    private final CheckboxChoicePort checkBoxChoicePort;
 
     private final MoodTrackerMailUseCase moodTrackerMailUseCase;
 
-    private final MultipleChoiceAnswerRepository multipleChoiceAnswerRepository;
-    private final CheckboxChoiceAnswerRepository checkboxChoiceAnswerRepository;
-    private final SubjectiveAnswerRepository subjectiveAnswerRepository;
+    private final MultipleChoiceAnswerPort multipleChoiceAnswerPort;
+    private final CheckboxChoiceAnswerPort checkBoxChoiceAnswerPort;
+    private final SubjectiveAnswerPort subjectiveAnswerPort;
 
     private final MoodTrackerReportUseCase moodTrackerReportUseCase;
+
     private final RedisReportProducer redisReportProducer;
     private final RedisReportConsumer redisReportConsumer;
-
-    private final HashIdUtil hashIdUtil;
-
-    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
-    private final WorkspaceJpaRepository workspaceJpaRepository;
 
     /**
      * 분위기 트래커 생성
      */
     @Override
     @Transactional
+    @CreateDocument(documentType = DocumentType.SNS_EVENT_ASSISTANT)
     public MoodTrackerResponseDTO.CreateResult create(
             User user,
             Workspace workspace,
             MoodTrackerRequestDTO.CreateRequest request
     ) {
 
-        Workspace foundWorkspace = workspaceJpaRepository.findById(workspace.getId())
-                .orElseThrow(() -> new WorkspaceHandler(ErrorStatus.WORKSPACE_NOT_FOUND));
-
         // 분위기 트래커 생성 및 저장
-        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, foundWorkspace);
-        MoodTracker savedMoodTracker = moodTrackerRepository.save(moodTracker);
+        MoodTracker moodTracker = MoodTrackerConverter.toMoodTracker(request, user, workspace);
+        moodTrackerPort.save(moodTracker);
 
         // 선택지 생성 및 저장
         for (MoodTrackerRequestDTO.SurveyQuestion questionDTO : request.getQuestions()) {
             SurveyQuestion question = MoodTrackerConverter.toSurveyQuestion(questionDTO, moodTracker);
-            surveyQuestionRepository.save(question);
+            surveyQuestionPort.save(question);
 
             if (questionDTO.getType() == MULTIPLE_CHOICE) {
                 List<MultipleChoice> choices = MoodTrackerConverter.toMultipleChoiceList(questionDTO.getOptions(), question);
-                multipleChoiceRepository.saveAll(choices);
+                multipleChoicePort.saveAll(choices);
             } else if (questionDTO.getType() == CHECKBOX_CHOICE) {
                 List<CheckboxChoice> choices = MoodTrackerConverter.toCheckboxChoiceList(questionDTO.getOptions(), question);
-                checkboxChoiceRepository.saveAll(choices);
+                checkBoxChoicePort.saveAll(choices);
             }
         }
 
         // Redis Queue에 스케쥴링 추가
         redisReportProducer.scheduleReport(moodTracker.getId(), moodTracker.getDueDate());
 
-        // mood tracker 생성 시 워크스페이스에 속해있는 모든 유저에 대해
-        // last opened 테이블에 마지막으로 연 시간은 null로하여 추가
-        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(foundWorkspace.getId());
-        userDocumentLastOpenedCommandUseCase.createInitialRecordsForWorkspaceUsers(usersInWorkspace, savedMoodTracker);
-
-        return MoodTrackerConverter.toCreateResultDTO(moodTracker, hashIdUtil);
+        return MoodTrackerConverter.toCreateResultDTO(moodTracker);
     }
 
     /**
@@ -117,7 +105,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             MoodTracker moodTracker,
             MoodTrackerRequestDTO.UpdateTitleRequest request
     ) {
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
@@ -127,7 +115,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
 
         // 엔티티 업데이트
         moodTracker.updateTitle(request.getTitle());
-        moodTrackerRepository.save(moodTracker);
+        moodTrackerPort.save(moodTracker);
 
         // 마감일 이후 && 썸네일이 생성된 시점이라면,
         if(moodTracker.getDueDate().isBefore(LocalDateTime.now()) && moodTracker.getThumbnailKeyName()!=null) {
@@ -152,7 +140,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         // redis queue에서 비워줘서 중복 처리 제외
         redisReportConsumer.removeFromQueue(moodTracker.getId());
 
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(moodTracker.getWorkspace().getId(), user.getId())
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(moodTracker.getWorkspace().getId(), user.getId())
                 .orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
         // 워크스페이스 생성자이거나 해당 분위기 트래커 생성자인 경우 허용
@@ -167,7 +155,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         }
 
         // 엔티티 삭제
-        moodTrackerRepository.delete(moodTracker);
+        moodTrackerPort.delete(moodTracker);
     }
 
     /**
@@ -197,7 +185,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             Long moodTrackerId,
             MoodTrackerRequestDTO.SurveyAnswerList request
     ) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerPort.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // 마감일 이후이면 답변 불가능
@@ -210,7 +198,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         List<CheckboxChoiceAnswer> checkboxChoiceAnswers = new ArrayList<>();
 
         // 전체 질문을 미리 조회 및 맵에 캐싱
-        List<SurveyQuestion> foundQuestions = surveyQuestionRepository.findAllByMoodTrackerId(foundMoodTracker.getId());
+        List<SurveyQuestion> foundQuestions = surveyQuestionPort.findAllByMoodTrackerId(foundMoodTracker.getId());
         Map<Long, SurveyQuestion> questionMap = foundQuestions.stream()
                 .collect(Collectors.toMap(SurveyQuestion::getId, q -> q));
 
@@ -228,7 +216,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
             switch (dto.getType()) {
                 case MULTIPLE_CHOICE -> {
                     // 질문 id와 선택지 id 함께 객관식 선택지 엔티티 조회 후 추가
-                    MultipleChoice foundMultipleChoice = multipleChoiceRepository
+                    MultipleChoice foundMultipleChoice = multipleChoicePort
                             .findByIdAndSurveyQuestionId(dto.getMultipleChoiceId(), dto.getQuestionId())
                             .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.INVALID_CHOICE_FOR_QUESTION));
 
@@ -238,7 +226,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
                 }
                 case CHECKBOX_CHOICE -> {
                     // 질문 id와 선택지 id 함께 체크박스 선택지 엔티티 목록 조회 후 추가
-                    List<CheckboxChoice> foundCheckboxChoices = checkboxChoiceRepository
+                    List<CheckboxChoice> foundCheckboxChoices = checkBoxChoicePort
                             .findAllByIdInAndSurveyQuestionId(dto.getCheckboxChoiceIdList(), dto.getQuestionId());
 
                     // 요청 개수와 조회 개수가 다르면 → 유효하지 않은 선택지 포함
@@ -271,12 +259,12 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
         }
 
         // 일괄 저장
-        multipleChoiceAnswerRepository.saveAll(multipleChoiceAnswers);
-        checkboxChoiceAnswerRepository.saveAll(checkboxChoiceAnswers);
-        subjectiveAnswerRepository.saveAll(subjectiveAnswers);
+        multipleChoiceAnswerPort.saveAll(multipleChoiceAnswers);
+        checkBoxChoiceAnswerPort.saveAll(checkboxChoiceAnswers);
+        subjectiveAnswerPort.saveAll(subjectiveAnswers);
 
         // 답변자 수 증가
-        moodTrackerRepository.addRespondentsNum(foundMoodTracker.getId());
+        moodTrackerPort.addRespondentsNum(foundMoodTracker.getId());
     }
 
     @Override
@@ -288,7 +276,7 @@ public class MoodTrackerCommandUseCaseImpl implements MoodTrackerCommandUseCase 
     ) {
 
         // 권한 확인
-        UserWorkspace userWorkspace = userWorkspaceJpaRepository.findByWorkspaceIdAndUserId(
+        UserWorkspace userWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(
                 moodTracker.getWorkspace().getId(), user.getId()
         ).orElseThrow(() -> new UserWorkspaceHandler(ErrorStatus.USER_WORKSPACE_NOT_FOUND));
 
