@@ -64,13 +64,13 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
                 request.getSnsCondition()
         );
 
-        SnsEvent savedSnsEvent = snsEventPort.save(createdSnsEvent);
-
         // PDF, DOCX파일 바이트 배열로 생성 및 썸네일 생성 & 업로드 / DB에 keyName저장
-        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(savedSnsEvent);
+        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(createdSnsEvent);
 
         // sns event 썸네일 key name 초기화
-        savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
+        createdSnsEvent.initThumbnailKeyName(thumbnailKeyName);
+
+        SnsEvent savedSnsEvent = snsEventPort.save(createdSnsEvent);
 
         return SnsEventResponseDTO.CreateSnsEventResponse.builder()
                 .snsEventId(savedSnsEvent.getId())
@@ -81,7 +81,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     @Override
     @Transactional
     @UpdateDocument
-    public void updateSnsEventTitle(
+    public void updateSnsEvent(
             User user,
             SnsEvent snsEvent,
             SnsEventRequestDTO.UpdateSnsEventRequest request
@@ -98,14 +98,15 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         }
 
         foundSnsEvent.updateTitle(request.getTitle());
-        SnsEvent savedSnsEvent = snsEventPort.save(foundSnsEvent);
 
         // S3문서 제목, S3 문서내 제목, 썸네일 이미지의 제목 변경
-        filePort.deleteSnsEventFileAndThumbnailImage(savedSnsEvent);
+        filePort.deleteSnsEventFileAndThumbnailImage(foundSnsEvent);
 
-        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(savedSnsEvent);
+        String thumbnailKeyName = uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(foundSnsEvent);
         // sns event 썸네일 key name 초기화
-        savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
+        foundSnsEvent.initThumbnailKeyName(thumbnailKeyName);
+
+        snsEventPort.save(foundSnsEvent);
     }
 
     @Override

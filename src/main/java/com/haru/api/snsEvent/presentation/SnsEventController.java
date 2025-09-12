@@ -106,7 +106,7 @@ public class SnsEventController {
             @Parameter(hidden = true) @AuthSnsEvent SnsEvent snsEvent
     ) {
 
-        snsEventCommandUseCase.updateSnsEventTitle(user, snsEvent, request);
+        snsEventCommandUseCase.updateSnsEvent(user, snsEvent, request);
 
         return ApiResponse.onSuccess("");
 

@@ -12,7 +12,7 @@ public interface SnsEventCommandUseCase {
 
     SnsEventResponseDTO.CreateSnsEventResponse createSnsEvent(User user, Workspace workspace, SnsEventRequestDTO.CreateSnsRequest request);
 
-    void updateSnsEventTitle(User user, SnsEvent snsEvent, SnsEventRequestDTO.UpdateSnsEventRequest request);
+    void updateSnsEvent(User user, SnsEvent snsEvent, SnsEventRequestDTO.UpdateSnsEventRequest request);
 
     void deleteSnsEvent(User user, SnsEvent snsEvent);
 

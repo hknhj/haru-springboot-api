@@ -1,13 +1,17 @@
 package com.haru.api.snsEvent.application.service;
 
+import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnailUseCase;
 import com.haru.api.snsEvent.application.port.in.WinnerDrawUseCase;
+import com.haru.api.snsEvent.application.port.out.FilePort;
 import com.haru.api.snsEvent.application.port.out.SnsEventPort;
 import com.haru.api.snsEvent.domain.SnsEvent;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
 import com.haru.api.user.domain.User;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
+import com.haru.api.workspace.domain.UserWorkspace;
 import com.haru.api.workspace.domain.Workspace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,13 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SnsEventCommandUseCaseImplTest {
@@ -40,6 +45,10 @@ class SnsEventCommandUseCaseImplTest {
     private SnsEventPort snsEventPort;
     @Mock
     private UploadFileAndThumbnailUseCase uploadFileAndThumbnailUseCase;
+    @Mock
+    private FilePort filePort;
+    @Mock
+    private UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
 
     private User user;
     private User otherUser;
@@ -62,14 +71,15 @@ class SnsEventCommandUseCaseImplTest {
                 .title("testWorkspace")
                 .instagramAccessToken("access-token")
                 .build();
-        snsEvent = SnsEvent.builder()
+        snsEvent = spy(SnsEvent.builder()
                 .id(1L)
                 .title("sns event 1")
                 .workspace(workspace)
                 .creator(user)
+                .thumbnailKeyName("sns-event/100/thumbnail.jpg")
                 .snsLink("https://snsevent.com")
                 .snsLinkTitle("title")
-                .build();
+                .build());
     }
 
     @Test
@@ -116,7 +126,79 @@ class SnsEventCommandUseCaseImplTest {
                 eq(request.getSnsCondition())
         );
         verify(snsEventPort, times(1)).save(any(SnsEvent.class));
-        verify(uploadFileAndThumbnailUseCase, times(1)).createAndUploadListFileAndThumbnail(snsEvent);
+        verify(uploadFileAndThumbnailUseCase, times(1)).createAndUploadListFileAndThumbnail(any(SnsEvent.class));
         assertThat(snsEvent.getThumbnailKeyName()).isEqualTo(expectedThumbnailKey);
+    }
+
+    @Test
+    @DisplayName("SNS 이벤트 제목 수정 성공")
+    void updateSnsEvent_Success() {
+
+        // given
+        String newThumbnailKey = "new/thumbnail/key.jpg";
+        String newTitle = "update-title";
+
+        SnsEventRequestDTO.UpdateSnsEventRequest request = SnsEventRequestDTO.UpdateSnsEventRequest.builder()
+                .title(newTitle)
+                .thumbnailKeyName(newThumbnailKey)
+                .build();
+        UserWorkspace userWorkspace = UserWorkspace.builder()
+                .user(user)
+                .workspace(workspace)
+                .build();
+
+        given(snsEventPort.findById(snsEvent.getId())).willReturn(snsEvent);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId()))
+                .willReturn(Optional.of(userWorkspace));
+        given(snsEventPort.save(any(SnsEvent.class))).willReturn(snsEvent);
+        given(uploadFileAndThumbnailUseCase.createAndUploadListFileAndThumbnail(any(SnsEvent.class)))
+                .willReturn(newThumbnailKey);
+
+        // when
+        snsEventCommandUseCase.updateSnsEvent(user, snsEvent, request);
+
+        // then
+        verify(snsEventPort, times(1)).findById(snsEvent.getId());
+        verify(userWorkspaceQueryUseCase, times(1)).getUserWorkspace(user.getId(), snsEvent.getWorkspaceId());
+        verify(filePort, times(1)).deleteSnsEventFileAndThumbnailImage(snsEvent);
+        verify(uploadFileAndThumbnailUseCase, times(1)).createAndUploadListFileAndThumbnail(snsEvent);
+        verify(snsEventPort, times(1)).save(snsEvent);
+
+        verify(snsEvent, times(1)).updateTitle(newTitle);
+        verify(snsEvent, times(1)).initThumbnailKeyName(newThumbnailKey);
+
+        // 실제 객체의 상태가 변경되었는지 확인
+        assertThat(snsEvent.getTitle()).isEqualTo(newTitle);
+    }
+
+    @Test
+    @DisplayName("SNS 이벤트 제목 수정 실패 - 권한 없음")
+    void updateSnsEvent_Fail_NoAuthority() {
+
+        // given
+        String newThumbnailKey = "new/thumbnail/key.jpg";
+        String newTitle = "update-title";
+        SnsEventRequestDTO.UpdateSnsEventRequest request = SnsEventRequestDTO.UpdateSnsEventRequest.builder()
+                .title(newTitle)
+                .thumbnailKeyName(newThumbnailKey)
+                .build();
+
+        UserWorkspace userWorkspaceForOtherUser = UserWorkspace.builder()
+                .user(otherUser)
+                .workspace(workspace)
+                .build();
+
+        given(snsEventPort.findById(snsEvent.getId())).willReturn(snsEvent);
+        given(userWorkspaceQueryUseCase.getUserWorkspace(otherUser.getId(), snsEvent.getWorkspaceId()))
+                .willReturn(Optional.of(userWorkspaceForOtherUser));
+
+        // when & then
+        assertThatThrownBy(() -> snsEventCommandUseCase.updateSnsEvent(otherUser, snsEvent, request))
+                .isInstanceOf(SnsEventHandler.class)
+                .hasMessageContaining("인스타그램 이벤트에 대한 수정 권한이 없습니다.");
+
+        verify(snsEvent, never()).updateTitle(any(String.class));
+        verify(snsEventPort, never()).save(any(SnsEvent.class));
+        verify(filePort, never()).deleteSnsEventFileAndThumbnailImage(any(SnsEvent.class));
     }
 }
