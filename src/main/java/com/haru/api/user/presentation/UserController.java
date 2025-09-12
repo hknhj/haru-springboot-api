@@ -1,5 +1,6 @@
 package com.haru.api.user.presentation;
 
+import com.haru.api.auth.application.facade.AuthFacade;
 import com.haru.api.user.application.port.in.UserSignUpWorkflowUseCase;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
@@ -24,6 +25,7 @@ public class UserController {
     private final UserCommandUseCase userCommandUseCase;
     private final UserQueryUseCase userQueryUseCase;
     private final UserSignUpWorkflowUseCase userSignUpWorkflowUseCase;
+    private final AuthFacade authFacade;
 
     @Operation(summary = "회원가입 [v1.0 (2025-08-05)]", description =
             "# [v1.0 (2025-08-05)](https://www.notion.so/2265da7802c580e8b883e3e4481fd61d?v=2265da7802c5816ab095000cc1ddadca&p=2265da7802c5819ca025d31fe9167842&pm=s)" +
@@ -51,7 +53,7 @@ public class UserController {
             @RequestBody @Valid UserRequestDTO.LoginRequest request
     ) {
         return ApiResponse.onSuccess(
-                userCommandUseCase.login(
+                authFacade.login(
                         request
                 )
         );
@@ -66,7 +68,7 @@ public class UserController {
             @RequestHeader("RefreshToken") String refreshToken
     ) {
         return ApiResponse.onSuccess(
-                userCommandUseCase.refresh(refreshToken)
+                authFacade.refresh(refreshToken)
         );
     }
 
@@ -78,7 +80,7 @@ public class UserController {
     public ApiResponse<Object> logout(
             @RequestHeader("Authorization") String accessToken
     ) {
-        userCommandUseCase.logout(accessToken);
+        authFacade.logout(accessToken);
         return ApiResponse.onSuccess(
                 null
         );
