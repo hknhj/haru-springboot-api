@@ -2,7 +2,7 @@ package com.haru.api.moodTracker.application.service;
 
 import com.haru.api.moodTracker.application.port.in.MoodTrackerMailUseCase;
 import com.haru.api.moodTracker.domain.MoodTracker;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
+import com.haru.api.moodTracker.infrastructure.jpa.MoodTrackerJpaRepository;
 import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MoodTrackerHandler;
@@ -19,7 +19,7 @@ import java.util.List;
 public class MoodTrackerMailUseCaseImpl implements MoodTrackerMailUseCase {
 
     private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-    private final MoodTrackerRepository moodTrackerRepository;
+    private final MoodTrackerJpaRepository moodTrackerJpaRepository;
     private final EmailSender emailSender;
 
     private final HashIdUtil hashIdUtil;
@@ -33,7 +33,7 @@ public class MoodTrackerMailUseCaseImpl implements MoodTrackerMailUseCase {
             String mailTitle,
             String mailContent
     ) {
-        MoodTracker foundMoodTracker = moodTrackerRepository.findById(moodTrackerId)
+        MoodTracker foundMoodTracker = moodTrackerJpaRepository.findById(moodTrackerId)
                 .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
 
         // id hash 처리

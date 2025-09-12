@@ -1,4 +1,4 @@
-package com.haru.api.moodTracker.infrastructure;
+package com.haru.api.moodTracker.infrastructure.jpa;
 
 import com.haru.api.moodTracker.domain.SubjectiveAnswer;
 import com.haru.api.moodTracker.domain.SurveyQuestion;
@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SubjectiveAnswerRepository extends JpaRepository<SubjectiveAnswer, Long> {
+public interface SubjectiveAnswerJpaRepository extends JpaRepository<SubjectiveAnswer, Long> {
     List<SubjectiveAnswer> findAllBySurveyQuestionIn(List<SurveyQuestion> questions);
 }

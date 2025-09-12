@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.moodTracker.domain.enums.QuestionType;
+import com.haru.api.shared_kernel.domain.CreatedDocument;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -23,7 +24,8 @@ public class MoodTrackerResponseDTO {
     @Getter
     @Builder
     public static class Preview {
-        private String moodTrackerHashedId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long moodTrackerId;
         private String title;
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime updatedAt;
@@ -34,8 +36,14 @@ public class MoodTrackerResponseDTO {
 
     @Getter
     @Builder
-    public static class CreateResult {
-        private String moodTrackerHashedId;
+    public static class CreateResult implements CreatedDocument {
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long moodTrackerId;
+        private String title;
+
+        public Long getId() {
+            return this.moodTrackerId;
+        }
     }
 
     @Getter
@@ -43,7 +51,8 @@ public class MoodTrackerResponseDTO {
     public static class BaseResult{
         @JsonSerialize(using = ToStringSerializer.class)
         private Long workspaceId;
-        private String moodTrackerHashedId;
+        @JsonSerialize(using = ToStringSerializer.class)
+        private Long moodTrackerId;
         private String title;
         @JsonSerialize(using = ToStringSerializer.class)
         private Long creatorId;

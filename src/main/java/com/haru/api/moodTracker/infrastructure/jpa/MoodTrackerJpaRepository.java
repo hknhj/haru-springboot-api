@@ -1,30 +1,24 @@
-package com.haru.api.moodTracker.infrastructure;
+package com.haru.api.moodTracker.infrastructure.jpa;
 
 import com.haru.api.moodTracker.domain.MoodTracker;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> {
+public interface MoodTrackerJpaRepository extends JpaRepository<MoodTracker, Long> {
 
     @Query("SELECT m FROM MoodTracker m WHERE m.workspace.id = :workspaceId")
     List<MoodTracker> findAllByWorkspaceId(Long workspaceId);
 
     @Query("SELECT m FROM MoodTracker m WHERE m.workspace.id = :workspaceId ORDER BY m.updatedAt DESC")
     List<MoodTracker> findAllByWorkspaceIdOrderByUpdatedAtDesc(Long workspaceId);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE MoodTracker m SET m.respondentsNum = m.respondentsNum + 1 WHERE m.id = :moodTrackerId")
-    void addRespondentsNum(Long moodTrackerId);
-
 
     @Query("SELECT mt FROM MoodTracker mt " +
             "WHERE mt.workspace.id = :workspaceId " +
@@ -37,4 +31,9 @@ public interface MoodTrackerRepository extends JpaRepository<MoodTracker, Long> 
             "  WHERE uw.user.id = :userId AND uw.workspace.id = mt.workspace.id" +
             ")")
     Optional<MoodTracker> findMoodTrackerByIdIfUserHasAccess(Long userId, Long moodTrackerId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE MoodTracker m SET m.respondentsNum = m.respondentsNum + 1 WHERE m.id = :moodTrackerId")
+    void addRespondentsNum(Long moodTrackerId);
 }

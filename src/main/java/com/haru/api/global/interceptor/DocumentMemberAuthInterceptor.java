@@ -3,7 +3,7 @@ package com.haru.api.global.interceptor;
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.enums.DocumentType;
-import com.haru.api.moodTracker.infrastructure.MoodTrackerRepository;
+import com.haru.api.moodTracker.infrastructure.jpa.MoodTrackerJpaRepository;
 import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
 import com.haru.api.user.domain.User;
 import com.haru.api.infra.security.jwt.SecurityUtil;
@@ -36,7 +36,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
     private final MeetingQueryUseCase meetingQueryUseCase;
     private final SnsEventJpaRepository snsEventJpaRepository;
-    private final MoodTrackerRepository moodTrackerRepository;
+    private final MoodTrackerJpaRepository moodTrackerJpaRepository;
 
     @Override
     public boolean preHandle(final HttpServletRequest request, final HttpServletResponse response, final Object handler) throws Exception {
@@ -100,7 +100,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
                 }
                 case TEAM_MOOD_TRACKER -> {
                     Long documentId = hashIdUtil.decode(documentIdStr);
-                    yield moodTrackerRepository.findMoodTrackerByIdIfUserHasAccess(userId, documentId)
+                    yield moodTrackerJpaRepository.findMoodTrackerByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
                 }
             };
