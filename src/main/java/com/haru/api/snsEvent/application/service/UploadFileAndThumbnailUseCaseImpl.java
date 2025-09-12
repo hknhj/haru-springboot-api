@@ -4,7 +4,7 @@ import com.haru.api.global.apiPayload.exception.handler.SnsEventHandler;
 import com.haru.api.global.util.file.FileConvertHelper;
 import com.haru.api.infra.s3.AmazonS3Manager;
 import com.haru.api.infra.s3.MarkdownFileUploader;
-import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnail;
+import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnailUseCase;
 import com.haru.api.snsEvent.application.port.out.*;
 import com.haru.api.snsEvent.domain.Participant;
 import com.haru.api.snsEvent.domain.SnsEvent;
@@ -20,7 +20,7 @@ import static com.haru.api.global.apiPayload.code.status.ErrorStatus.SNS_EVENT_D
 
 @Component
 @RequiredArgsConstructor
-public class UploadFileAndThumbnailImpl implements UploadFileAndThumbnail {
+public class UploadFileAndThumbnailUseCaseImpl implements UploadFileAndThumbnailUseCase {
 
     private final ParticipantPort participantPort;
     private final WinnerPort winnerPort;
