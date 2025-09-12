@@ -1,8 +1,8 @@
 package com.haru.api.user.application.service;
 
+import com.haru.api.auth.application.facade.AuthFacade;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.user.application.port.out.AuthPort;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.EmailStatus;
@@ -32,7 +32,7 @@ class UserCommandUseCaseImplTest {
     private UserPort userPort;
 
     @Mock
-    private AuthPort authPort;
+    private AuthFacade authFacade;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -261,15 +261,15 @@ class UserCommandUseCaseImplTest {
                 .refreshToken("testRefreshToken")
                 .build();
 
-        given(authPort.login(request)).willReturn(expectedResponse);
+        given(authFacade.login(request)).willReturn(expectedResponse);
 
         // when
-        UserResponseDTO.LoginResponse actualResponse = userCommandUseCase.login(request);
+        UserResponseDTO.LoginResponse actualResponse = authFacade.login(request);
 
         // then
         assertThat(expectedResponse).isEqualTo(actualResponse);
 
-        verify(authPort, times(1)).login(request);
+        verify(authFacade, times(1)).login(request);
     }
 
     @Test
@@ -280,10 +280,10 @@ class UserCommandUseCaseImplTest {
         String accessToken = "logoutAccessToken";
 
         // when
-        authPort.logout(accessToken);
+        authFacade.logout(accessToken);
 
         // then
-        verify(authPort, times(1)).logout(accessToken);
+        verify(authFacade, times(1)).logout(accessToken);
     }
 
     @Test
@@ -294,9 +294,9 @@ class UserCommandUseCaseImplTest {
         String refreshToken = "refreshToken";
 
         // when
-        authPort.refresh(refreshToken);
+        authFacade.refresh(refreshToken);
 
         // then
-        verify(authPort, times(1)).refresh(refreshToken);
+        verify(authFacade, times(1)).refresh(refreshToken);
     }
 }

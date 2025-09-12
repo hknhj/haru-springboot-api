@@ -1,13 +1,10 @@
-package com.haru.api.user.application.port.out;
+package com.haru.api.auth.application.port.in;
 
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 
-public interface AuthPort {
+public interface LoginUseCase {
 
     UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request);
 
-    void logout(String accessToken);
-
-    UserResponseDTO.RefreshResponse refresh(String accessToken);
 }

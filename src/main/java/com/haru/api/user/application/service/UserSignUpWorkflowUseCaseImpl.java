@@ -1,5 +1,6 @@
 package com.haru.api.user.application.service;
 
+import com.haru.api.auth.application.port.in.LoginUseCase;
 import com.haru.api.user.application.converter.UserConverter;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.application.port.in.UserSignUpWorkflowUseCase;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class UserSignUpWorkflowUseCaseImpl implements UserSignUpWorkflowUseCase {
 
     private final UserCommandUseCase userCommandUseCase;
+    private final LoginUseCase loginUseCase;
     private final WorkspaceCommandUseCase workspaceCommandUseCase;
 
     @Override
@@ -34,7 +36,7 @@ public class UserSignUpWorkflowUseCaseImpl implements UserSignUpWorkflowUseCase 
                 .password(request.getPassword())
                 .build();
 
-        return userCommandUseCase.login(loginRequest);
+        return loginUseCase.login(loginRequest);
     }
 
     @Override

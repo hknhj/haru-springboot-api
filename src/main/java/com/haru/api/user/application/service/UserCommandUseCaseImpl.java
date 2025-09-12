@@ -1,7 +1,6 @@
 package com.haru.api.user.application.service;
 
 import com.haru.api.user.application.converter.UserConverter;
-import com.haru.api.user.application.port.out.AuthPort;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
@@ -20,14 +19,8 @@ import org.springframework.stereotype.Service;
 public class UserCommandUseCaseImpl implements UserCommandUseCase {
 
     private final UserPort userPort;
-    private final AuthPort authPort;
 
     private final PasswordEncoder passwordEncoder;
-
-    @Override
-    public UserResponseDTO.LoginResponse login(UserRequestDTO.LoginRequest request) {
-        return authPort.login(request);
-    }
 
     @Transactional
     @Override
@@ -50,16 +43,6 @@ public class UserCommandUseCaseImpl implements UserCommandUseCase {
         }
 
         return UserConverter.toUserDTO(userPort.save(user));
-    }
-
-    @Override
-    public UserResponseDTO.RefreshResponse refresh(String refreshToken) {
-        return authPort.refresh(refreshToken);
-    }
-
-    @Override
-    public void logout(String accessToken) {
-        authPort.logout(accessToken);
     }
 
     @Override

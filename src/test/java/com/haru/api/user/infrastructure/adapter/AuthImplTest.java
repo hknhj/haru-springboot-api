@@ -1,5 +1,6 @@
 package com.haru.api.user.infrastructure.adapter;
 
+import com.haru.api.auth.application.facade.AuthFacade;
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
 import com.haru.api.infra.security.jwt.JwtUtils;
@@ -34,7 +35,7 @@ import static org.mockito.BDDMockito.*;
 class AuthImplTest {
 
     @InjectMocks
-    private AuthImpl authPort;
+    private AuthFacade authFacade;
 
     @Mock
     private UserPort userPort;
@@ -100,7 +101,7 @@ class AuthImplTest {
         given(jwtUtils.generateAndSaveRefreshToken(any(String.class))).willReturn(fakeRefreshToken);
 
         // when
-        UserResponseDTO.LoginResponse response = authPort.login(request);
+        UserResponseDTO.LoginResponse response = authFacade.login(request);
 
         // then
         assertThat(response.getUserId()).isEqualTo(fakeUser.getId());
@@ -129,7 +130,7 @@ class AuthImplTest {
                 .willThrow(new MemberHandler(ErrorStatus.MEMBER_USERNAME_NOT_FOUND));
 
         // when & then
-        assertThatThrownBy(() -> authPort.login(request))
+        assertThatThrownBy(() -> authFacade.login(request))
                 .isInstanceOf(MemberHandler.class)
                 .hasMessageContaining("해당 아이디를 가진 유저가 존재하지 않습니다.");
     }
@@ -150,7 +151,7 @@ class AuthImplTest {
                 .willThrow(new MemberHandler(ErrorStatus.MEMBER_PASSWORD_NOT_MATCH));
 
         // when & then
-        assertThatThrownBy(() -> authPort.login(request))
+        assertThatThrownBy(() -> authFacade.login(request))
                 .isInstanceOf(MemberHandler.class)
                 .hasMessageContaining("비밀번호가 일치하지 않습니다.");
     }
@@ -171,7 +172,7 @@ class AuthImplTest {
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
-        authPort.logout(accessToken);
+        authFacade.logout(accessToken);
 
         // then
         mockSecurityUtil.verify(SecurityUtil::getCurrentUserId);
@@ -203,7 +204,7 @@ class AuthImplTest {
         given(jwtUtils.generateAndSaveRefreshToken(any(String.class))).willReturn(newRefreshToken);
 
         // when
-        UserResponseDTO.RefreshResponse response = authPort.refresh(refreshToken);
+        UserResponseDTO.RefreshResponse response = authFacade.refresh(refreshToken);
 
         // then
         assertThat(response.getUserId()).isEqualTo(fakeUserId);
@@ -230,7 +231,7 @@ class AuthImplTest {
         given(valueOperations.get(any(String.class))).willReturn(wrongRefreshToken);
 
         // when & then
-        assertThatThrownBy(() -> authPort.refresh(refreshToken))
+        assertThatThrownBy(() -> authFacade.refresh(refreshToken))
                 .isInstanceOf(MemberHandler.class)
                 .hasMessageContaining("리프레시 토큰이 일치하지 않습니다.");
 
