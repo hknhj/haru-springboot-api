@@ -4,7 +4,6 @@ import com.haru.api.global.annotation.CreateDocument;
 import com.haru.api.snsEvent.application.port.in.UploadFileAndThumbnail;
 import com.haru.api.snsEvent.application.port.out.*;
 import com.haru.api.snsEvent.application.port.in.SnsEventCommandUseCase;
-import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.snsEvent.application.converter.SnsEventConverter;
 import com.haru.api.snsEvent.presentation.dto.SnsEventRequestDTO;
 import com.haru.api.snsEvent.presentation.dto.SnsEventResponseDTO;
@@ -15,10 +14,9 @@ import com.haru.api.snsEvent.domain.enums.Format;
 import com.haru.api.snsEvent.domain.enums.ListType;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.DocumentType;
+import com.haru.api.workspace.application.port.in.UserWorkspaceQueryUseCase;
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
 import com.haru.api.workspace.domain.UserWorkspace;
-import com.haru.api.workspace.domain.enums.Auth;
-import com.haru.api.workspace.infrastructure.jpa.UserWorkspaceJpaRepository;
 import com.haru.api.workspace.domain.Workspace;
 import com.haru.api.global.annotation.DeleteDocument;
 import com.haru.api.global.annotation.UpdateDocument;
@@ -46,13 +44,12 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
     private final FileUploadPort fileUploadPort;
 
     private final ParticipantFilter participantFilter;
+    private final PickWinner pickWinner;
 
     private final UploadFileAndThumbnail uploadFileAndThumbnail;
 
     private final WorkspaceQueryUseCase workspaceQueryUseCase;
-    private final UserWorkspaceJpaRepository userWorkspaceJpaRepository;
-
-    private final UserDocumentLastOpenedCommandUseCase userDocumentLastOpenedCommandUseCase;
+    private final UserWorkspaceQueryUseCase userWorkspaceQueryUseCase;
 
     private final AmazonS3Manager amazonS3Manager;
 
@@ -106,7 +103,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         participantPort.saveAll(filteredCommentList);
 
         // 당첨자 선정 후 저장
-        for (String nickname : pickWinners(filteredCommentSet, request.getSnsCondition().getWinnerCount())) {
+        for (String nickname : pickWinner.getWinners(filteredCommentSet, request.getSnsCondition().getWinnerCount())) {
             Winner winner = SnsEventConverter.toWinner(nickname);
             winner.setSnsEvent(createdSnsEvent);
             winnerList.add(winner);
@@ -136,7 +133,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEventRequestDTO.UpdateSnsEventRequest request
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 수정 가능)
@@ -153,10 +150,6 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         String thumbnailKeyName = uploadFileAndThumbnail.createAndUploadListFileAndThumbnail(savedSnsEvent);
         // sns event 썸네일 key name 초기화
         savedSnsEvent.initThumbnailKeyName(thumbnailKeyName);
-
-        // SNS Event 제목 수정 시 워크스페이스에 속해있는 모든 유저에 대해 썸네일 이미지 키 수정
-        List<User> usersInWorkspace = userWorkspaceJpaRepository.findUsersByWorkspaceId(savedSnsEvent.getWorkspace().getId());
-        userDocumentLastOpenedCommandUseCase.updateRecordsTitleAndThumbnailForWorkspaceUsers(savedSnsEvent, request);
     }
 
     @Override
@@ -167,7 +160,7 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
             SnsEvent snsEvent
     ) {
 
-        UserWorkspace foundUserWorkspace = userWorkspaceJpaRepository.findByWorkspaceAndAuth(snsEvent.getWorkspace(), Auth.ADMIN)
+        UserWorkspace foundUserWorkspace = userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), snsEvent.getWorkspaceId())
                 .orElseThrow(() -> new MemberHandler(WORKSPACE_CREATOR_NOT_FOUND));
 
         // 수정 권한 확인 (워크스페이스 생성자 혹은 SNS 이벤트의 생성자만 삭제 가능)
@@ -179,7 +172,6 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         fileUploadPort.deleteSnsEventFileAndThumbnailImage(snsEvent);
 
         snsEventPort.delete(snsEvent);
-
     }
 
     @Override
@@ -230,16 +222,5 @@ public class SnsEventCommandUseCaseImpl implements SnsEventCommandUseCase {
         return SnsEventResponseDTO.ListDownLoadLinkResponse.builder()
                 .downloadLink(downloadLink)
                 .build();
-    }
-
-    private List<String> pickWinners(Set<String> participants, int n) {
-        List<String> list = new ArrayList<>(participants); // Set → List로 변환
-        Collections.shuffle(list); // 무작위 섞기
-
-        if (n >= list.size()) {
-            return list; // 참가자가 n보다 적으면 전원 반환
-        }
-
-        return list.subList(0, n); // 앞에서 n개만 추출
     }
 }
