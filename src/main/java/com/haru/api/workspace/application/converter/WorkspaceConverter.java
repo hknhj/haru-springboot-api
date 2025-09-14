@@ -1,6 +1,6 @@
 package com.haru.api.workspace.application.converter;
 
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.presentation.dto.UserResponseDTO;
 import com.haru.api.workspace.presentation.dto.WorkspaceResponseDTO;

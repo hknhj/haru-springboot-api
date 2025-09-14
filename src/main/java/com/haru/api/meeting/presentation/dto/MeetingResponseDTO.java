@@ -2,7 +2,7 @@ package com.haru.api.meeting.presentation.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.haru.api.shared_kernel.domain.CreatedDocument;
+import com.haru.api.common_library.domain.CreatedDocument;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

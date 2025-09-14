@@ -3,7 +3,7 @@ package com.haru.api.snsEvent.presentation.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.haru.api.shared_kernel.domain.CreatedDocument;
+import com.haru.api.common_library.domain.CreatedDocument;
 import lombok.*;
 
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.haru.api.shared_kernel.domain;
+package com.haru.api.common_library.domain;
 
 import com.haru.api.user.domain.enums.DocumentType;
 

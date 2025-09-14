@@ -1,6 +1,6 @@
 package com.haru.api.workspace.application.service;
 
-import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.common_library.application.port.in.DocumentQueryUseCase;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.application.converter.UserDocumentLastOpenedConverter;
@@ -8,7 +8,7 @@ import com.haru.api.workspace.application.port.in.WorkspaceCommandUseCase;
 import com.haru.api.workspace.application.port.out.UserWorkspacePort;
 import com.haru.api.workspace.application.port.out.WorkspaceInvitationPort;
 import com.haru.api.workspace.application.port.out.WorkspacePort;
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.enums.Auth;

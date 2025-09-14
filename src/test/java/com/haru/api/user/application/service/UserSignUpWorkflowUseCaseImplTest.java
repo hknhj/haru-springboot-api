@@ -1,6 +1,6 @@
 package com.haru.api.user.application.service;
 
-import com.haru.api.auth.application.facade.AuthFacade;
+import com.haru.api.auth.application.port.in.LoginUseCase;
 import com.haru.api.user.application.port.in.UserCommandUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.presentation.dto.UserRequestDTO;
@@ -28,7 +28,7 @@ class UserSignUpWorkflowUseCaseImplTest {
     @Mock
     private WorkspaceCommandUseCase workspaceCommandUseCase;
     @Mock
-    private AuthFacade authFacade;
+    private LoginUseCase loginUseCase;
 
     @Test
     @DisplayName("회원가입 성공 - 토큰 X")
@@ -122,18 +122,16 @@ class UserSignUpWorkflowUseCaseImplTest {
                 .build();
 
         given(userCommandUseCase.createUser(request)).willReturn(fakeUser);
-        given(authFacade.login(any(UserRequestDTO.LoginRequest.class))).willReturn(fakeResponse);
+        given(loginUseCase.login(any(UserRequestDTO.LoginRequest.class))).willReturn(fakeResponse);
 
         // when
         UserResponseDTO.LoginResponse response = userSignUpWorkflowUseCase.signUpAndLogin(request, null);
 
         // then
-        assertThat(response).isEqualTo(fakeResponse);
-
         // createUser가 먼저 호출되고, login이 나중에 호출되었는지 순서 검증
-        InOrder inOrder = inOrder(userCommandUseCase);
+        InOrder inOrder = inOrder(userCommandUseCase, loginUseCase);
         inOrder.verify(userCommandUseCase).createUser(request);
-        inOrder.verify(authFacade).login(any(UserRequestDTO.LoginRequest.class));
+        inOrder.verify(loginUseCase).login(any(UserRequestDTO.LoginRequest.class));
 
         // acceptInvite는 절대 호출되지 않았는지 검증
         verify(workspaceCommandUseCase, never()).acceptInvite(any(), any());
@@ -171,19 +169,17 @@ class UserSignUpWorkflowUseCaseImplTest {
                 .build();
 
         given(userCommandUseCase.createUser(request)).willReturn(fakeUser);
-        given(authFacade.login(any(UserRequestDTO.LoginRequest.class))).willReturn(fakeResponse);
+        given(loginUseCase.login(any(UserRequestDTO.LoginRequest.class))).willReturn(fakeResponse);
 
         // when
         UserResponseDTO.LoginResponse response = userSignUpWorkflowUseCase.signUpAndLogin(request, token);
 
         // then
-        assertThat(response).isEqualTo(fakeResponse);
-
         // createUser가 먼저 호출되고, login이 나중에 호출되었는지 순서 검증
-        InOrder inOrder = inOrder(userCommandUseCase, workspaceCommandUseCase);
+        InOrder inOrder = inOrder(userCommandUseCase, workspaceCommandUseCase, loginUseCase);
         inOrder.verify(userCommandUseCase).createUser(request);
         inOrder.verify(workspaceCommandUseCase).acceptInvite(eq(token), eq(fakeUser));
-        inOrder.verify(authFacade).login(any(UserRequestDTO.LoginRequest.class));
+        inOrder.verify(loginUseCase).login(any(UserRequestDTO.LoginRequest.class));
 
         // acceptInvite가 호출되었는지 검증
         verify(workspaceCommandUseCase, times(1)).acceptInvite(token, fakeUser);

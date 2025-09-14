@@ -1,10 +1,10 @@
 package com.haru.api.user.application.port.in;
 
-import com.haru.api.shared_kernel.domain.CreatedDocument;
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.CreatedDocument;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.User;
-import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.common_library.domain.DocumentModifier;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.enums.DocumentType;
 

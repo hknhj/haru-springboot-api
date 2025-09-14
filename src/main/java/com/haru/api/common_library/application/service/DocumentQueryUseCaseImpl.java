@@ -1,9 +1,9 @@
-package com.haru.api.shared_kernel.application.service;
+package com.haru.api.common_library.application.service;
 
 import com.haru.api.meeting.application.port.in.MeetingQueryUseCase;
 import com.haru.api.moodTracker.infrastructure.jpa.MoodTrackerJpaRepository;
-import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.application.port.in.DocumentQueryUseCase;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.snsEvent.infrastructure.jpa.SnsEventJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
