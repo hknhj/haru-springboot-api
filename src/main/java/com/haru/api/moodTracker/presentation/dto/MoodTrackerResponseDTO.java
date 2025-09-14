@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.haru.api.moodTracker.domain.enums.QuestionType;
-import com.haru.api.shared_kernel.domain.CreatedDocument;
+import com.haru.api.common_library.domain.CreatedDocument;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;

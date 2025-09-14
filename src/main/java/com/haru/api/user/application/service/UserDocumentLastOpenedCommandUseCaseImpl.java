@@ -2,15 +2,15 @@ package com.haru.api.user.application.service;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.MemberHandler;
-import com.haru.api.shared_kernel.domain.CreatedDocument;
+import com.haru.api.common_library.domain.CreatedDocument;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.out.UserDocumentLastOpenedPort;
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.application.port.out.UserPort;
 import com.haru.api.user.domain.UserDocumentId;
 import com.haru.api.user.domain.UserDocumentLastOpened;
 import com.haru.api.user.domain.User;
-import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.common_library.domain.DocumentModifier;
 import com.haru.api.user.domain.enums.DocumentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

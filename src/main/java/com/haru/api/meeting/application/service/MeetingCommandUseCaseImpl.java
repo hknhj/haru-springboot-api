@@ -92,12 +92,12 @@ public class MeetingCommandUseCaseImpl implements MeetingCommandUseCase {
             throw new MemberHandler(ErrorStatus.MEMBER_NO_AUTHORITY);
         }
 
-        meeting.updateTitle(request.getTitle());
+        foundMeeting.updateTitle(request.getTitle());
 
-        markdownFileUploader.updateFileTitle(meeting.getProceedingPdfKeyName(), request.getTitle() + ".pdf");
-        markdownFileUploader.updateFileTitle(meeting.getProceedingWordKeyName(), request.getTitle() + ".docx");
+        markdownFileUploader.updateFileTitle(foundMeeting.getProceedingPdfKeyName(), request.getTitle() + ".pdf");
+        markdownFileUploader.updateFileTitle(foundMeeting.getProceedingWordKeyName(), request.getTitle() + ".docx");
 
-        meetingPort.save(meeting);
+        meetingPort.save(foundMeeting);
     }
 
     @Override

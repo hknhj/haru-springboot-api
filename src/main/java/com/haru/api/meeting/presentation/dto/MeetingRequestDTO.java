@@ -1,6 +1,6 @@
 package com.haru.api.meeting.presentation.dto;
 
-import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.common_library.domain.DocumentModifier;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

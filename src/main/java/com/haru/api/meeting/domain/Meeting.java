@@ -1,6 +1,6 @@
 package com.haru.api.meeting.domain;
 
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.domain.enums.DocumentType;
 import com.haru.api.user.domain.User;
 import com.haru.api.workspace.domain.Workspace;
@@ -11,8 +11,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "meetings")

@@ -2,8 +2,8 @@ package com.haru.api.workspace.application.service;
 
 import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
-import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.application.port.in.DocumentQueryUseCase;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedQueryUseCase;
 import com.haru.api.workspace.application.port.in.WorkspaceQueryUseCase;
 import com.haru.api.user.domain.UserDocumentLastOpened;

@@ -1,12 +1,11 @@
 package com.haru.api.workspace.application.service;
 
-import com.haru.api.global.apiPayload.code.status.ErrorStatus;
 import com.haru.api.global.apiPayload.exception.handler.UserWorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceHandler;
 import com.haru.api.global.apiPayload.exception.handler.WorkspaceInvitationHandler;
 import com.haru.api.infra.mail.EmailSender;
 import com.haru.api.infra.s3.AmazonS3Manager;
-import com.haru.api.shared_kernel.application.port.in.DocumentQueryUseCase;
+import com.haru.api.common_library.application.port.in.DocumentQueryUseCase;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.application.port.in.UserQueryUseCase;
 import com.haru.api.user.domain.User;

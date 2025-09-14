@@ -1,6 +1,6 @@
-package com.haru.api.shared_kernel.application.port.in;
+package com.haru.api.common_library.application.port.in;
 
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 
 import java.time.LocalDateTime;
 import java.util.List;

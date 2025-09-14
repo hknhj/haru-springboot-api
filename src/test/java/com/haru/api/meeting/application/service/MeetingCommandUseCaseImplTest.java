@@ -82,14 +82,14 @@ class MeetingCommandUseCaseImplTest {
                 .title("testWorkspace")
                 .build();
 
-        meeting = Meeting.builder()
+        meeting = spy(Meeting.builder()
                 .id(1L)
                 .title("회의1")
                 .workspace(workspace)
                 .creator(user)
                 .agendaResult("")
                 .startTime(LocalDateTime.of(2025, 9, 9, 14, 0))
-                .build();
+                .build());
     }
 
     @Test
@@ -145,17 +145,26 @@ class MeetingCommandUseCaseImplTest {
 
         // given
         String newTitle = "변경된 회의 제목";
-        Meeting meeting = mock(Meeting.class);
         MeetingRequestDTO.updateTitle request = MeetingRequestDTO.updateTitle.builder()
                 .title(newTitle)
+                .build();
+
+        UserWorkspace userWorkspace = UserWorkspace.builder()
+                .id(1L)
+                .auth(Auth.ADMIN)
                 .build();
 
         String pdfKey = "meeting/proceeding.pdf";
         String wordKey = "meeting/proceeding.docx";
 
+        given(meetingPort.findById(meeting.getId())).willReturn(Optional.of(meeting));
+
         given(meeting.getCreator()).willReturn(user);
         given(meeting.getProceedingPdfKeyName()).willReturn(pdfKey);
         given(meeting.getProceedingWordKeyName()).willReturn(wordKey);
+
+        given(userWorkspaceQueryUseCase.getUserWorkspace(user.getId(), workspace.getId()))
+                .willReturn(Optional.of(userWorkspace));
 
         // when
         meetingCommandUseCase.updateMeetingTitle(user, meeting, request);
@@ -164,21 +173,28 @@ class MeetingCommandUseCaseImplTest {
         verify(meeting, times(1)).updateTitle(newTitle);
         verify(markdownFileUploader, times(1)).updateFileTitle(pdfKey, newTitle + ".pdf");
         verify(markdownFileUploader, times(1)).updateFileTitle(wordKey, newTitle + ".docx");
+
         verify(meetingPort, times(1)).save(meeting);
     }
 
     @Test
     @DisplayName("회의 생성자가 아닌 경우 제목 변경 시 권한 없음 예외 발생")
     void updateMeetingTitle_NoAuthority_ThrowsException() {
-        // given
-        Meeting meeting = mock(Meeting.class);
 
+        // given
         String newTitle = "변경된 회의 제목";
         MeetingRequestDTO.updateTitle request = MeetingRequestDTO.updateTitle.builder()
                         .title(newTitle)
                         .build();
 
-        given(meeting.getCreator()).willReturn(user);
+        UserWorkspace userWorkspace = UserWorkspace.builder()
+                        .id(1L)
+                        .auth(Auth.MEMBER)
+                        .build();
+
+        given(meeting.getCreator()).willReturn(otherUser);
+        given(meetingPort.findById(any(Long.class))).willReturn(Optional.of(meeting));
+        given(userWorkspaceQueryUseCase.getUserWorkspace(otherUser.getId(), meeting.getWorkspace().getId())).willReturn(Optional.of(userWorkspace));
 
         // when & then
         assertThatThrownBy(() -> meetingCommandUseCase.updateMeetingTitle(otherUser, meeting, request))
@@ -186,8 +202,8 @@ class MeetingCommandUseCaseImplTest {
                 .hasMessageContaining("수정 및 삭제할 권한이 없습니다.");
 
         verify(meeting, never()).updateTitle(anyString());
-        verifyNoInteractions(markdownFileUploader);
-        verifyNoInteractions(meetingPort);
+        verify(markdownFileUploader, never()).updateFileTitle(anyString(), anyString());
+        verify(meetingPort, never()).save(meeting);
     }
 
     @Test

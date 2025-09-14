@@ -1,7 +1,7 @@
 package com.haru.api.global.aspect;
 
 import com.haru.api.global.annotation.CreateDocument;
-import com.haru.api.shared_kernel.domain.CreatedDocument;
+import com.haru.api.common_library.domain.CreatedDocument;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
 import com.haru.api.user.domain.User;
 import com.haru.api.user.domain.enums.DocumentType;

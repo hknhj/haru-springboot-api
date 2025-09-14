@@ -32,8 +32,6 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
 
     private final UserPort userPort;
 
-    private final HashIdUtil hashIdUtil;
-
     private final MeetingQueryUseCase meetingQueryUseCase;
     private final SnsEventJpaRepository snsEventJpaRepository;
     private final MoodTrackerJpaRepository moodTrackerJpaRepository;
@@ -99,7 +97,7 @@ public class DocumentMemberAuthInterceptor implements HandlerInterceptor {
                             .orElseThrow(() -> new SnsEventHandler(ErrorStatus.SNS_EVENT_NOT_FOUND));
                 }
                 case TEAM_MOOD_TRACKER -> {
-                    Long documentId = hashIdUtil.decode(documentIdStr);
+                    Long documentId = Long.parseLong(documentIdStr);
                     yield moodTrackerJpaRepository.findMoodTrackerByIdIfUserHasAccess(userId, documentId)
                             .orElseThrow(() -> new MoodTrackerHandler(ErrorStatus.MOOD_TRACKER_NOT_FOUND));
                 }

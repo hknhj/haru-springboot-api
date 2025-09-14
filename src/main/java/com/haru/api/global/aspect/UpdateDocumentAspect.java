@@ -1,8 +1,8 @@
 package com.haru.api.global.aspect;
 
-import com.haru.api.shared_kernel.domain.Documentable;
+import com.haru.api.common_library.domain.Documentable;
 import com.haru.api.user.application.port.in.UserDocumentLastOpenedCommandUseCase;
-import com.haru.api.shared_kernel.domain.DocumentModifier;
+import com.haru.api.common_library.domain.DocumentModifier;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
