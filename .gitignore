@@ -43,3 +43,5 @@ out/
 
 ### .yml file
 src/main/resources/application-secret.yml
+application-secret.yml
+application.yml
